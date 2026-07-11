@@ -60,8 +60,6 @@ function Landing() {
   );
 }
 
-/* ═══════════════════ Nav ═══════════════════ */
-
 function SiteNav() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">

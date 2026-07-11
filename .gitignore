@@ -44,3 +44,13 @@ temp_docx.txt
 *.md
 *.txt
 *.py
+
+# Backend microservices (JANGAN push ke frontend repo Cloudflare Pages)
+backend/
+*.db
+*.pkl
+*.csv
+__pycache__/
+*.pyc
+venv/
+.venv/

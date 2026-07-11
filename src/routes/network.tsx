@@ -6,17 +6,11 @@ import {
   ZoomIn, 
   ZoomOut, 
   Maximize, 
-  ShieldAlert, 
   Check, 
   ExternalLink,
   Info,
-  TrendingDown,
-  Smartphone,
-  Globe,
-  User,
-  ShieldCheck,
-  Ban,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTransactionActions, useTransactions, type Transaction } from "@/lib/transaction-store";
@@ -24,6 +18,7 @@ import { createSpecificTransaction, type PaymentRail } from "@/lib/transaction-e
 import { scoreTransaction } from "@/lib/risk-scoring";
 import { generateTemplateReasoning } from "@/lib/ai-reasoning";
 import { useTranslation } from "@/lib/i18n";
+import { api } from "@/lib/api/api-client";
 
 export const Route = createFileRoute("/network")({
   head: () => ({
@@ -46,6 +41,7 @@ interface Node {
 }
 
 interface Edge {
+  id?: string;
   from: string;
   to: string;
   label?: string;
@@ -61,9 +57,8 @@ interface Scenario {
   insights: string[];
 }
 
-// ─── Scenarios Data ──────────────────────────────────────────────────────────
-
-const SCENARIOS: Scenario[] = [
+// ─── Static Scenario Templates ──────────────────────────────────────────────
+const STATIC_SCENARIOS: Scenario[] = [
   {
     id: "mule-ring",
     name: "Sindikat Rekening Bagong (Mule Ring)",
@@ -164,6 +159,15 @@ const SCENARIOS: Scenario[] = [
       "Pelarian Dana (Fan-Out): Rekening penampung langsung mengosongkan saldo dengan mentransfer dana keluar ke merchant terafiliasi situs judi online dan bursa kripto luar negeri.",
       "Karakteristik Off-Hours: Transaksi didominasi terjadi pada jam tengah malam antara pukul 01:00 hingga 04:30 WIB."
     ]
+  },
+  {
+    id: "live-fds",
+    name: "Dynamic FDS Live Graph (NetworkX)",
+    description: "Visualisasi real-time berbasis analisis graf NetworkX terhadap transaksi aktif yang tersimpan di basis data.",
+    severity: "high",
+    nodes: [],
+    edges: [],
+    insights: []
   }
 ];
 
@@ -184,92 +188,166 @@ const RISK_RING: Record<Node["risk"], string> = {
 function NetworkPage() {
   const { t } = useTranslation();
   const [activeScenarioIdx, setActiveScenarioIdx] = useState(0);
-  const scenario = SCENARIOS[activeScenarioIdx];
+  const [scenarios, setScenarios] = useState<Scenario[]>(STATIC_SCENARIOS);
+  const [loading, setLoading] = useState(false);
+
+  const scenario = scenarios[activeScenarioIdx] || STATIC_SCENARIOS[0];
 
   const { injectTransactions, updateAuditStatusBulk } = useTransactionActions();
   const allTxs = useTransactions();
   
-  // Dynamic state for active graph nodes
+  // Dynamic state for active graph components
   const [dynamicNodes, setDynamicNodes] = useState<Node[]>([]);
+  const [dynamicEdges, setDynamicEdges] = useState<Edge[]>([]);
+  const [dynamicInsights, setDynamicInsights] = useState<string[]>([]);
   const [selected, setSelected] = useState<Node | null>(null);
   const [hovered, setHovered] = useState<Node | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   
-  // Custom toast notification state
   const [toast, setToast] = useState<{ message: string; type: "success" | "warning" } | null>(null);
   
   const isDragging = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize and synchronize nodes when scenario changes
+  // Load scenarios list from API (with local static fallback)
   useEffect(() => {
-    setDynamicNodes(scenario.nodes);
-    setSelected(scenario.nodes[0] || null);
-    setHovered(null);
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-    
-    // Build and inject transactions for this scenario
-    const scenarioTxs: Transaction[] = [];
-    const baseDate = new Date();
-    
-    scenario.edges.forEach((edge, idx) => {
-      const fromNode = scenario.nodes.find(n => n.id === edge.from);
-      const toNode = scenario.nodes.find(n => n.id === edge.to);
-      if (!fromNode || !toNode) return;
-      
-      // We only create transaction objects for actual fund movements or simulated actions
-      // For simplicity, we just inject one transaction per edge to represent the link in the DB
-      let amount = 1000000;
-      if (edge.label?.includes("Rp")) {
-        const val = edge.label.replace(/[^0-9.]/g, "");
-        if (val) amount = parseFloat(val) * 1000000;
+    const fetchScenarios = async () => {
+      try {
+        const remoteScenarios = await api.getGraphScenarios();
+        if (remoteScenarios && remoteScenarios.length > 0) {
+          // Append the live analysis template if not present
+          const hasLive = remoteScenarios.some(s => s.id === "live-fds");
+          const list = hasLive ? remoteScenarios : [...remoteScenarios, STATIC_SCENARIOS[3]];
+          setScenarios(list);
+        }
+      } catch (err) {
+        console.warn("[NetworkGraph] API scenarios not loaded. Using local fallbacks.", err);
       }
-      
-      const raw = createSpecificTransaction({
-        id: `TX-GRAPH-${scenario.id}-${idx}`,
-        timestamp: new Date(baseDate.getTime() - (idx * 60000)),
-        senderName: fromNode.type === "account" ? fromNode.details?.["Nama Pemilik"] || fromNode.label : "System Device",
-        senderAccount: fromNode.details?.["No. Rekening"] || "DEV-000",
-        receiverName: toNode.type === "account" ? toNode.details?.["Nama Pemilik"] || toNode.label : toNode.label,
-        receiverAccount: toNode.details?.["No. Rekening"] || "MCH-000",
-        amount,
-        rail: "Transfer" as PaymentRail,
-        merchantCategory: toNode.type === "merchant" ? toNode.details?.["Kategori"] || "Retail" : "Transfer",
-      });
-      
-      const scoring = scoreTransaction(raw);
-      // Force severity to match scenario severity if it's the main loop
-      if (scenario.severity === "critical" || scenario.severity === "high") {
-        scoring.severity = scenario.severity;
-        scoring.score = scoring.severity === "critical" ? 95 : 85;
+    };
+    fetchScenarios();
+  }, []);
+
+  // Update visualizer layout and content based on selection
+  useEffect(() => {
+    const renderScenario = async () => {
+      setSelected(null);
+      setHovered(null);
+
+      if (scenario.id === "live-fds") {
+        setLoading(true);
+        try {
+          // Map local store transactions to simple models for the API
+          const payload = allTxs.map(t => ({
+            id: t.raw.id,
+            amount: t.raw.amount,
+            payment_rail: t.raw.rail,
+            severity: t.scoring.severity,
+            sender_account: t.raw.senderAccount,
+            sender_name: t.raw.senderName,
+            sender_bank: t.raw.senderBank,
+            sender_city: t.raw.senderCity,
+            receiver_account: t.raw.receiverAccount,
+            receiver_name: t.raw.receiverName,
+            receiver_bank: t.raw.receiverBank,
+            receiver_city: t.raw.receiverCity,
+            merchant: t.raw.merchant,
+            merchant_category: t.raw.merchantCategory,
+            device_brand: t.raw.deviceBrand,
+            device_type: t.raw.deviceType,
+            device_fingerprint: t.raw.deviceFingerprint,
+            ip_address: t.raw.ipAddress,
+          }));
+
+          const res = await api.analyzeGraph(payload);
+          setDynamicNodes(res.nodes);
+          setDynamicEdges(res.edges);
+          setDynamicInsights(res.insights);
+          if (res.nodes.length > 0) {
+            setSelected(res.nodes[0]);
+          }
+        } catch (err) {
+          console.error("[NetworkGraph] Dynamic graph analysis failed:", err);
+          showToast("Gagal memproses analisis graf live backend.", "warning");
+          // fallback empty
+          setDynamicNodes([]);
+          setDynamicEdges([]);
+          setDynamicInsights(["Tidak dapat terhubung ke Scoring / Graph service. Nyalakan backend service untuk melihat visualisasi live."]);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Standard static scenario
+        setDynamicNodes(scenario.nodes);
+        setDynamicEdges(scenario.edges);
+        setDynamicInsights(scenario.insights);
+        setSelected(scenario.nodes[0] || null);
+
+        // Build and inject transactions for this scenario in local store (for demo audit lifecycle)
+        const scenarioTxs: Transaction[] = [];
+        const baseDate = new Date();
+        
+        scenario.edges.forEach((edge, idx) => {
+          const fromNode = scenario.nodes.find(n => n.id === edge.from);
+          const toNode = scenario.nodes.find(n => n.id === edge.to);
+          if (!fromNode || !toNode) return;
+          
+          let amount = 1000000;
+          if (edge.label?.includes("Rp")) {
+            const val = edge.label.replace(/[^0-9.]/g, "");
+            if (val) amount = parseFloat(val) * 1000000;
+          }
+          
+          const raw = createSpecificTransaction({
+            id: `TX-GRAPH-${scenario.id}-${idx}`,
+            timestamp: new Date(baseDate.getTime() - (idx * 60000)),
+            senderName: fromNode.type === "account" ? fromNode.details?.["Nama Pemilik"] || fromNode.label : "System Device",
+            senderAccount: fromNode.details?.["No. Rekening"] || "DEV-000",
+            receiverName: toNode.type === "account" ? toNode.details?.["Nama Pemilik"] || toNode.label : toNode.label,
+            receiverAccount: toNode.details?.["No. Rekening"] || "MCH-000",
+            amount,
+            rail: "Transfer" as PaymentRail,
+            merchantCategory: toNode.type === "merchant" ? toNode.details?.["Kategori"] || "Retail" : "Transfer",
+          });
+          
+          const scoring = scoreTransaction(raw);
+          if (scenario.severity === "critical" || scenario.severity === "high") {
+            scoring.severity = scenario.severity;
+            scoring.score = scoring.severity === "critical" ? 95 : 85;
+          }
+          
+          scenarioTxs.push({
+            raw,
+            scoring,
+            aiReasoning: generateTemplateReasoning(raw, scoring),
+            isReasoningLoading: false,
+            auditStatus: "pending_review",
+            auditNotes: `Auto-generated from Graph Scenario: ${scenario.name}`,
+            auditedBy: null,
+            auditedAt: null,
+            auditHistory: [],
+            createdAt: new Date(),
+          });
+        });
+        
+        injectTransactions(scenarioTxs);
       }
-      
-      scenarioTxs.push({
-        raw,
-        scoring,
-        aiReasoning: generateTemplateReasoning(raw, scoring),
-        isReasoningLoading: false,
-        auditStatus: "pending_review",
-        auditNotes: `Auto-generated from Graph Scenario: ${scenario.name}`,
-        auditedBy: null,
-        auditedAt: null,
-        auditHistory: [],
-        createdAt: new Date(),
-      });
-    });
-    
-    injectTransactions(scenarioTxs);
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    };
+
+    renderScenario();
   }, [activeScenarioIdx, scenario, injectTransactions]);
 
-  // Check if current scenario is under investigation
-  const scenarioTxIds = scenario.edges.map((_, idx) => `TX-GRAPH-${scenario.id}-${idx}`);
+  // Check if scenario is under investigation
+  const scenarioTxIds = scenario.id === "live-fds" 
+    ? dynamicEdges.filter(e => e.id).map(e => e.id!) 
+    : scenario.edges.map((_, idx) => `TX-GRAPH-${scenario.id}-${idx}`);
+  
   const relatedTxs = allTxs.filter(t => scenarioTxIds.includes(t.raw.id));
-  const isInvestigated = relatedTxs.length > 0 && relatedTxs.every(t => t.auditStatus === "under_investigation" || t.auditStatus === "planned_audit" || t.auditStatus === "blocked");
+  const isInvestigated = relatedTxs.length > 0 && relatedTxs.every(t => t.auditStatus === "under_investigation" || t.auditStatus === "blocked");
 
-  // Show a toast that auto-dismisses
   const showToast = (message: string, type: "success" | "warning" = "success") => {
     setToast({ message, type });
     const timer = setTimeout(() => setToast(null), 4000);
@@ -279,7 +357,6 @@ function NetworkPage() {
   const byId = (id: string) => dynamicNodes.find((n) => n.id === id) || scenario.nodes.find((n) => n.id === id)!;
 
   const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    // Only drag when clicking background, not nodes
     if ((e.target as HTMLElement).tagName === "circle" || (e.target as HTMLElement).tagName === "text") return;
     isDragging.current = true;
     lastPos.current = { x: e.clientX, y: e.clientY };
@@ -309,9 +386,7 @@ function NetworkPage() {
     showToast("Tampilan visualisasi direset ke pusat.");
   };
 
-  // Action: Investigate Cluster
   const handleInvestigateCluster = () => {
-    // Map all nodes in active scenario to Under Investigation
     const updated = dynamicNodes.map(node => ({
       ...node,
       details: {
@@ -327,16 +402,14 @@ function NetworkPage() {
       if (freshSelected) setSelected(freshSelected);
     }
 
-    // Update transactions in the store
+    // Update transactions status in backend and store
     updateAuditStatusBulk(scenarioTxIds, "under_investigation", `Tinjauan klaster dari FDS Graph: ${scenario.name}`);
-
     showToast(`Jaringan ${scenario.name} telah dimasukkan ke Antrean Audit untuk diinvestigasi.`, "success");
   };
 
   return (
     <AppShell title={t('network.title')} subtitle={t('network.subtitle')}>
       
-      {/* Toast Notification */}
       <AnimatePresence>
         {toast && (
           <motion.div
@@ -362,7 +435,7 @@ function NetworkPage() {
       <div className="grid gap-4 lg:grid-cols-4">
         
         {/* Graph Render Area */}
-        <div className="lg:col-span-3 rounded-lg border border-border bg-card overflow-hidden flex flex-col">
+        <div className="lg:col-span-3 rounded-lg border border-border bg-card overflow-hidden flex flex-col relative">
           
           {/* Visual Header */}
           <div className="flex flex-wrap items-center justify-between border-b border-border px-5 py-3 bg-card relative z-10 gap-2">
@@ -410,6 +483,15 @@ function NetworkPage() {
             </div>
           </div>
 
+          {/* Loading Indicator for NetworkX computation */}
+          {loading && (
+            <div className="absolute inset-0 bg-card/65 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="mt-3 text-sm font-semibold text-foreground">Calculating Dynamic Node Relations...</div>
+              <p className="mt-1 text-xs text-muted-foreground">Running layout spring embedding & PageRank hub identification</p>
+            </div>
+          )}
+
           {/* SVG Frame Canvas */}
           <div 
             ref={containerRef}
@@ -426,10 +508,8 @@ function NetworkPage() {
               viewBox="0 0 820 440" 
               className="absolute inset-0 h-full w-full"
             >
-              {/* Main Transform Group */}
               <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} style={{ transformOrigin: "410px 220px" }}>
                 
-                {/* SVG Edge Markers */}
                 <defs>
                   <marker id="arrow" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" />
@@ -437,7 +517,7 @@ function NetworkPage() {
                 </defs>
 
                 {/* Draw Edges */}
-                {scenario.edges.map((e, i) => {
+                {dynamicEdges.map((e, i) => {
                   const a = byId(e.from);
                   const b = byId(e.to);
                   if (!a || !b) return null;
@@ -496,7 +576,6 @@ function NetworkPage() {
                       onPointerEnter={() => setHovered(n)}
                       onPointerLeave={() => setHovered(null)}
                     >
-                      {/* Selection / Hover Aura rings */}
                       <circle 
                         cx={n.x} 
                         cy={n.y} 
@@ -506,7 +585,6 @@ function NetworkPage() {
                         className="transition-opacity duration-200" 
                       />
                       
-                      {/* Base colored circle */}
                       <circle 
                         cx={n.x} 
                         cy={n.y} 
@@ -517,7 +595,6 @@ function NetworkPage() {
                         className="transition-all duration-200 shadow-sm"
                       />
                       
-                      {/* Center Type Letter */}
                       <text 
                         x={n.x} 
                         y={n.y + 4.5} 
@@ -530,7 +607,6 @@ function NetworkPage() {
                         {st.icon}
                       </text>
                       
-                      {/* Bottom Label Text */}
                       <text 
                         x={n.x} 
                         y={n.y + 36} 
@@ -546,13 +622,12 @@ function NetworkPage() {
                   );
                 })}
 
-                {/* SVG-Nested Tooltip (Fixes placement & responsive alignment perfectly!) */}
+                {/* SVG-Nested Tooltip */}
                 {hovered && (
                   <g 
                     transform={`translate(${hovered.x}, ${hovered.y - 32})`}
                     className="pointer-events-none transition-all duration-150 select-none z-30"
                   >
-                    {/* Tooltip Background Card */}
                     <rect 
                       x="-70" 
                       y="-36" 
@@ -564,12 +639,9 @@ function NetworkPage() {
                       strokeWidth="1.5" 
                     />
                     
-                    {/* Little downward pointer triangle */}
                     <polygon points="-6,4 6,4 0,10" fill="var(--card)" stroke="var(--border)" strokeWidth="1" />
-                    {/* Small white line to mask target border connection */}
                     <line x1="-5" y1="4" x2="5" y2="4" stroke="var(--card)" strokeWidth="2.5" />
                     
-                    {/* Header Label */}
                     <text 
                       x="0" 
                       y="-22" 
@@ -581,7 +653,6 @@ function NetworkPage() {
                       {hovered.label}
                     </text>
                     
-                    {/* Type pill label left */}
                     <text 
                       x="-60" 
                       y="-8" 
@@ -592,7 +663,6 @@ function NetworkPage() {
                       {NODE_STYLE[hovered.type].label.toUpperCase()}
                     </text>
                     
-                    {/* Severity label right */}
                     <text 
                       x="60" 
                       y="-8" 
@@ -617,7 +687,6 @@ function NetworkPage() {
               <Legend swatch="var(--chart-5)" label="I: Alamat IP" />
             </div>
 
-            {/* Quick Helper Floating Tip */}
             <div className="absolute bottom-3 right-3 hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-card/60 px-2.5 py-1 text-[10px] text-muted-foreground backdrop-blur select-none">
               <Info className="h-3.5 w-3.5" /> {t('network.help.pan')} · {t('network.help.zoom')}
             </div>
@@ -633,38 +702,41 @@ function NetworkPage() {
               {t('network.scenarios')}
             </div>
             <div className="p-3 space-y-2">
-              {SCENARIOS.map((sc, i) => {
-                const scTxIds = sc.edges.map((_, idx) => `TX-GRAPH-${sc.id}-${idx}`);
+              {scenarios.map((sc, i) => {
+                const scTxIds = sc.id === "live-fds"
+                  ? dynamicEdges.filter(e => e.id).map(e => e.id!)
+                  : sc.edges.map((_, idx) => `TX-GRAPH-${sc.id}-${idx}`);
                 const scRelatedTxs = allTxs.filter(t => scTxIds.includes(t.raw.id));
-                const isScInvestigated = scRelatedTxs.length > 0 && scRelatedTxs.every(t => t.auditStatus === "under_investigation" || t.auditStatus === "planned_audit" || t.auditStatus === "blocked");
+                const isScInvestigated = scRelatedTxs.length > 0 && scRelatedTxs.every(t => t.auditStatus === "under_investigation" || t.auditStatus === "blocked");
                 
                 return (
-                <button
-                  key={sc.id}
-                  onClick={() => setActiveScenarioIdx(i)}
-                  className={`w-full text-left p-3 rounded-lg border text-xs transition-all flex flex-col gap-1 active:scale-[0.98] ${
-                    activeScenarioIdx === i
-                      ? "border-primary bg-primary/10 text-foreground"
-                      : "border-border hover:bg-accent/60 text-muted-foreground"
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-bold text-foreground">{sc.name}</span>
-                    <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase ${
-                      isScInvestigated
-                        ? "bg-warning/20 text-warning"
-                        : sc.severity === "critical"
-                          ? "bg-critical/20 text-critical"
-                          : "bg-destructive/20 text-destructive"
-                    }`}>
-                      {isScInvestigated ? t('network.status.investigating') : sc.severity}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
-                    {sc.description}
-                  </p>
-                </button>
-              )})}
+                  <button
+                    key={sc.id}
+                    onClick={() => setActiveScenarioIdx(i)}
+                    className={`w-full text-left p-3 rounded-lg border text-xs transition-all flex flex-col gap-1 active:scale-[0.98] ${
+                      activeScenarioIdx === i
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border hover:bg-accent/60 text-muted-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-bold text-foreground">{sc.name}</span>
+                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase ${
+                        isScInvestigated
+                          ? "bg-warning/20 text-warning"
+                          : sc.severity === "critical"
+                            ? "bg-critical/20 text-critical"
+                            : "bg-destructive/20 text-destructive"
+                      }`}>
+                        {isScInvestigated ? t('network.status.investigating') : sc.severity}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+                      {sc.description}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -692,7 +764,6 @@ function NetworkPage() {
 
                 <div className="h-px bg-border my-2" />
 
-                {/* Render Dynamic Metadata */}
                 {selected.details ? (
                   <div className="space-y-2">
                     {Object.entries(selected.details).map(([key, val]) => (
@@ -723,7 +794,7 @@ function NetworkPage() {
                 )}
 
                 <div className="pt-2 text-[10px] text-muted-foreground italic leading-relaxed border-t border-dashed border-border mt-3">
-                  *Terhubung dengan {scenario.edges.filter((e) => e.from === selected.id || e.to === selected.id).length} entitas lain dalam jaringan terindikasi fraud.
+                  *Terhubung dengan {dynamicEdges.filter((e) => e.from === selected.id || e.to === selected.id).length} entitas lain dalam jaringan terindikasi fraud.
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mt-4">
@@ -735,7 +806,7 @@ function NetworkPage() {
                   </button>
                   <button
                     onClick={handleInvestigateCluster}
-                    disabled={isInvestigated}
+                    disabled={isInvestigated || scenarioTxIds.length === 0}
                     className="inline-flex h-8 items-center justify-center gap-1 rounded bg-warning/10 border border-warning/20 hover:bg-warning/20 disabled:opacity-40 disabled:pointer-events-none text-warning font-bold transition-all shadow-sm"
                   >
                     <Search className="h-3.5 w-3.5" /> {isInvestigated ? t('network.btn.investigating') : t('network.btn.investigate')}
@@ -755,7 +826,7 @@ function NetworkPage() {
               Analisis Temuan Jaringan
             </div>
             <ul className="space-y-3 p-5 text-xs">
-              {scenario.insights.map((insight, idx) => (
+              {dynamicInsights.map((insight, idx) => (
                 <li key={`insight-${idx}`} className="flex items-start gap-2.5 leading-relaxed">
                   <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
                     idx === 0 ? "bg-critical" : idx === 1 ? "bg-destructive" : "bg-warning"

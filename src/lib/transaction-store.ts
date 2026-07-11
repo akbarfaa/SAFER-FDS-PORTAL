@@ -1,9 +1,8 @@
 /**
  * SAFER — Transaction Store
  *
- * React Context providing centralised, in-memory state management for
- * all transactions in the demo session.  Handles generation, scoring,
- * AI reasoning, audit status lifecycle, and filtering.
+ * Centralised state management for all transactions, synced with the
+ * FastAPI database and ML scoring backend.
  */
 
 import {
@@ -22,6 +21,7 @@ import {
 import { scoreTransaction, type ScoringResult, type Indicator } from "./risk-scoring";
 import { generateTemplateReasoning, generateLLMReasoning, type LLMConfig } from "./ai-reasoning";
 import type { Severity } from "./safer-data";
+import { api, type TransactionResponse } from "./api/api-client";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -114,6 +114,108 @@ export function txScore(t: Transaction) { return t.scoring.score; }
 export function txAmount(t: Transaction) { return t.raw.amount; }
 export function txRail(t: Transaction) { return t.raw.rail; }
 
+// ─── Mapper Function ────────────────────────────────────────────────────────
+
+export function mapBackendTx(b: TransactionResponse): Transaction {
+  const indicators: Indicator[] = [];
+  try {
+    const factors = JSON.parse(b.primary_risk_factors || "[]");
+    factors.forEach((f: any) => {
+      indicators.push({
+        id: f.feature,
+        label: f.label,
+        detail: f.label,
+        weight: Math.round(f.shap_value * 100),
+        maxWeight: 100,
+        hit: true
+      });
+    });
+  } catch (e) {
+    // If no risk factors JSON, populate from active binary columns
+    const keys: Array<keyof TransactionResponse> = [
+      "is_velocity_anomaly", "is_geo_mismatch", "is_off_hours",
+      "is_high_value_for_rail", "is_suspicious_ip", "is_risky_merchant",
+      "is_new_account", "has_failed_attempts", "is_device_mismatch",
+      "is_sim_swap", "is_unusual_beneficiary", "is_new_device"
+    ];
+    keys.forEach(k => {
+      if (b[k] === true) {
+        indicators.push({
+          id: k,
+          label: k.replace("is_", "").replace(/_/g, " "),
+          detail: k.replace("is_", "").replace(/_/g, " "),
+          weight: 10,
+          maxWeight: 10,
+          hit: true
+        });
+      }
+    });
+  }
+
+  return {
+    raw: {
+      id: b.id,
+      timestamp: new Date(b.timestamp),
+      senderName: b.sender_name,
+      senderAccount: b.sender_account,
+      senderBank: b.sender_bank,
+      senderCity: b.sender_city,
+      senderProvince: b.sender_province,
+      senderLat: b.sender_lat,
+      senderLng: b.sender_lng,
+      receiverName: b.receiver_name,
+      receiverAccount: b.receiver_account,
+      receiverBank: b.receiver_bank,
+      receiverCity: b.receiver_city,
+      receiverProvince: b.receiver_province,
+      receiverLat: b.receiver_lat,
+      receiverLng: b.receiver_lng,
+      amount: b.amount,
+      rail: b.payment_rail as any,
+      ewalletProvider: b.ewallet_provider,
+      merchant: b.merchant,
+      merchantCategory: b.merchant_category,
+      channel: b.channel,
+      deviceType: b.device_type,
+      deviceBrand: b.device_brand,
+      deviceFingerprint: b.device_fingerprint,
+      ipAddress: b.ip_address,
+      isNewDevice: b.is_new_device,
+      accountAgeDays: b.account_age_days,
+      isVelocityAnomaly: b.is_velocity_anomaly,
+      isGeoMismatch: b.is_geo_mismatch,
+      isOffHours: b.is_off_hours,
+      isHighValueForRail: b.is_high_value_for_rail,
+      isSuspiciousIp: b.is_suspicious_ip,
+      isRiskyMerchant: b.is_risky_merchant,
+      isNewAccount: b.is_new_account,
+      hasFailedAttempts: b.has_failed_attempts,
+      isDeviceMismatch: b.is_device_mismatch,
+      isSimSwap: b.is_sim_swap,
+      isUnusualBeneficiary: b.is_unusual_beneficiary,
+      velocityCount: b.velocity_count,
+      geoDistanceKm: b.geo_distance_km,
+    },
+    scoring: {
+      score: b.risk_score,
+      severity: b.severity,
+      fraudProbability: b.fraud_probability,
+      xgbProbability: b.xgb_probability,
+      lgbProbability: b.lgb_probability,
+      indicators: indicators,
+      suggestedAction: b.suggested_action,
+    },
+    aiReasoning: b.ai_reasoning,
+    isReasoningLoading: false,
+    auditStatus: b.audit_status as any,
+    auditNotes: b.audit_notes,
+    auditedBy: b.audited_by,
+    auditedAt: b.audited_at ? new Date(b.audited_at) : null,
+    auditHistory: [],
+    createdAt: b.created_at ? new Date(b.created_at) : new Date(),
+  };
+}
+
 // ─── Store (external store pattern for perf) ────────────────────────────────
 
 type Listener = () => void;
@@ -129,6 +231,7 @@ class TransactionStore {
   };
   private _autoInterval: ReturnType<typeof setInterval> | null = null;
   private _autoIntervalMs = 15_000;
+  private _pollInterval: ReturnType<typeof setInterval> | null = null;
   private _fraudRatio = 0.18;
   private _batchSize = 3;
 
@@ -138,7 +241,60 @@ class TransactionStore {
       const saved = localStorage.getItem("safer_llm_config");
       if (saved) this._llmConfig = JSON.parse(saved);
     } catch { /* ignore */ }
+
+    // Initial load from backend database
+    this.loadInitialTransactions();
+
+    // Start background polling to keep client sync with backend DB
+    this.startPolling();
   }
+
+  loadInitialTransactions = async () => {
+    try {
+      const res = await api.getTransactions({ page: 1, page_size: 100 });
+      this._transactions = res.items.map(mapBackendTx);
+      this._emit();
+    } catch (err) {
+      console.warn("[TransactionStore] Failed to fetch initial data from backend. Falling back offline.", err);
+    }
+  };
+
+  startPolling = () => {
+    this.stopPolling();
+    this._pollInterval = setInterval(async () => {
+      try {
+        const res = await api.getTransactions({ page: 1, page_size: 100 });
+        const backendTxs = res.items.map(mapBackendTx);
+        
+        // Check for new transactions or changes in status to avoid unnecessary emits
+        const localIds = new Set(this._transactions.map(t => t.raw.id));
+        const hasNew = backendTxs.some(t => !localIds.has(t.raw.id));
+        
+        let hasStatusChange = false;
+        for (const btx of backendTxs) {
+          const ltx = this._transactions.find(t => t.raw.id === btx.raw.id);
+          if (ltx && ltx.auditStatus !== btx.auditStatus) {
+            hasStatusChange = true;
+            break;
+          }
+        }
+        
+        if (hasNew || hasStatusChange || this._transactions.length !== backendTxs.length) {
+          this._transactions = backendTxs;
+          this._emit();
+        }
+      } catch (err) {
+        console.warn("[TransactionStore] Background sync polling failed:", err);
+      }
+    }, 4000); // Poll every 4 seconds
+  };
+
+  stopPolling = () => {
+    if (this._pollInterval) {
+      clearInterval(this._pollInterval);
+      this._pollInterval = null;
+    }
+  };
 
   // ── Subscriptions ──────────────────────────────────────────────────────
   subscribe = (listener: Listener) => {
@@ -149,7 +305,6 @@ class TransactionStore {
   getSnapshot = () => this._transactions;
 
   private _emit() {
-    // Create new array ref to trigger re-renders
     this._transactions = [...this._transactions];
     this._listeners.forEach(l => l());
   }
@@ -157,98 +312,58 @@ class TransactionStore {
   // ── Transaction Generation ─────────────────────────────────────────────
   generateBatch = async (count?: number, forceHighRisk = false) => {
     const n = count ?? this._batchSize;
-    const rawBatch = generateTransactionBatch(n, this._fraudRatio, forceHighRisk);
-    const newTxs: Transaction[] = [];
-
-    for (const raw of rawBatch) {
-      const scoring = scoreTransaction(raw);
-      const auditStatus: AuditStatus =
-        scoring.severity === "critical" ? "blocked"
-          : scoring.severity === "high" ? "pending_review"
-            : "pending_review";
-
-      const tx: Transaction = {
-        raw,
-        scoring,
-        aiReasoning: "",
-        isReasoningLoading: true,
-        auditStatus,
-        auditNotes: "",
-        auditedBy: null,
-        auditedAt: null,
-        auditHistory: [],
-        createdAt: new Date(),
-      };
-
-      // Generate template reasoning immediately (sync)
-      tx.aiReasoning = generateTemplateReasoning(raw, scoring);
-      tx.isReasoningLoading = false;
-
-      newTxs.push(tx);
-    }
-
-    // Prepend new transactions (newest first)
-    this._transactions = [...newTxs, ...this._transactions];
-    this._emit();
-
-    // If LLM is enabled, upgrade reasoning asynchronously
-    if (this._llmConfig.enabled && this._llmConfig.apiKey) {
-      for (const tx of newTxs) {
-        this._upgradeLLMReasoning(tx);
+    try {
+      // Generate through FastAPI Data + Scoring services
+      const backendTxs = await api.generateBatch(n, this._fraudRatio);
+      const newTxs = backendTxs.map(mapBackendTx);
+      this._transactions = [...newTxs, ...this._transactions];
+      this._emit();
+    } catch (err) {
+      console.error("[TransactionStore] Batch generate failed. Falling back to local scoring:", err);
+      // Local fallback
+      const rawBatch = generateTransactionBatch(n, this._fraudRatio, forceHighRisk);
+      const fallbackTxs: Transaction[] = [];
+      for (const raw of rawBatch) {
+        const scoring = scoreTransaction(raw);
+        fallbackTxs.push({
+          raw,
+          scoring,
+          aiReasoning: generateTemplateReasoning(raw, scoring),
+          isReasoningLoading: false,
+          auditStatus: scoring.severity === "critical" ? "blocked" : "pending_review",
+          auditNotes: "Fallback Offline Mode",
+          auditedBy: null,
+          auditedAt: null,
+          auditHistory: [],
+          createdAt: new Date(),
+        });
       }
+      this._transactions = [...fallbackTxs, ...this._transactions];
+      this._emit();
     }
   };
 
-  private async _upgradeLLMReasoning(tx: Transaction) {
-    try {
-      const idx = this._transactions.findIndex(t => t.raw.id === tx.raw.id);
-      if (idx === -1) return;
-
-      this._transactions[idx] = { ...this._transactions[idx], isReasoningLoading: true };
-      this._emit();
-
-      const reasoning = await generateLLMReasoning(tx.raw, tx.scoring, this._llmConfig);
-
-      const idx2 = this._transactions.findIndex(t => t.raw.id === tx.raw.id);
-      if (idx2 === -1) return;
-
-      this._transactions[idx2] = {
-        ...this._transactions[idx2],
-        aiReasoning: reasoning,
-        isReasoningLoading: false,
-      };
-      this._emit();
-    } catch {
-      const idx = this._transactions.findIndex(t => t.raw.id === tx.raw.id);
-      if (idx !== -1) {
-        this._transactions[idx] = { ...this._transactions[idx], isReasoningLoading: false };
-        this._emit();
-      }
-    }
-  }
-
   // ── Scenario Injection ──────────────────────────────────────────────────
   injectTransactions = (txs: Transaction[]) => {
-    // Filter out transactions that already exist (by ID)
     const existingIds = new Set(this._transactions.map(t => t.raw.id));
     const newTxs = txs.filter(t => !existingIds.has(t.raw.id));
     
     if (newTxs.length === 0) return;
     
-    // Prepend new transactions
     this._transactions = [...newTxs, ...this._transactions];
     this._emit();
-    
-    // Upgrade LLM reasoning if enabled
-    if (this._llmConfig.enabled && this._llmConfig.apiKey) {
-      for (const tx of newTxs) {
-        this._upgradeLLMReasoning(tx);
-      }
-    }
   };
 
   // ── Audit Actions ──────────────────────────────────────────────────────
-  updateAuditStatus = (txId: string, newStatus: AuditStatus, notes?: string) => {
+  updateAuditStatus = async (txId: string, newStatus: AuditStatus, notes?: string) => {
+    // 1. Pessimistically update the backend first
+    try {
+      await api.updateAuditStatus(txId, newStatus, notes || "", "Analyst Demo");
+    } catch (err) {
+      console.error("[TransactionStore] Failed to update audit status on backend:", err);
+    }
+
+    // 2. Reflect change in local memory
     const idx = this._transactions.findIndex(t => t.raw.id === txId);
     if (idx === -1) return;
 
@@ -272,7 +387,24 @@ class TransactionStore {
     this._emit();
   };
 
-  updateAuditStatusBulk = (txIds: string[], newStatus: AuditStatus, notes?: string) => {
+  updateAuditStatusBulk = async (txIds: string[], newStatus: AuditStatus, notes?: string) => {
+    // 1. Update backend (special gateway cluster route)
+    if (newStatus === "under_investigation") {
+      try {
+        await api.investigateCluster(txIds, notes || "Cluster investigation", "Analyst Demo (Graph)");
+      } catch (err) {
+        console.error("[TransactionStore] Bulk status update failed on backend:", err);
+      }
+    } else {
+      // Sequence them otherwise
+      for (const txId of txIds) {
+        try {
+          await api.updateAuditStatus(txId, newStatus, notes || "", "Analyst Demo (Graph)");
+        } catch (e) { /* ignore single errors */ }
+      }
+    }
+
+    // 2. Reflect in local memory
     let changed = false;
     const now = new Date();
     
@@ -314,7 +446,6 @@ class TransactionStore {
     this._autoInterval = setInterval(() => {
       this.generateBatch();
     }, this._autoIntervalMs);
-    // Generate one batch immediately
     this.generateBatch();
   };
 
@@ -341,7 +472,6 @@ class TransactionStore {
   get autoIntervalMs() { return this._autoIntervalMs; }
   set autoIntervalMs(ms: number) {
     this._autoIntervalMs = Math.max(3000, Math.min(60000, ms));
-    // Restart if running
     if (this._autoInterval) {
       this.startAutoGenerate();
     }
@@ -408,18 +538,15 @@ const store = new TransactionStore();
 const StoreContext = createContext<TransactionStore>(store);
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
-  // Use a ref so the same store instance is shared across the tree
   const storeRef = useRef(store);
   return createElement(StoreContext.Provider, { value: storeRef.current }, children);
 }
 
-/** Hook — returns the full transaction list (triggers re-render on changes) */
 export function useTransactions(): Transaction[] {
   const s = useContext(StoreContext);
   return useSyncExternalStore(s.subscribe, s.getSnapshot, s.getSnapshot);
 }
 
-/** Hook — returns store actions (stable refs) */
 export function useTransactionActions() {
   const s = useContext(StoreContext);
   return {
@@ -444,7 +571,6 @@ export function useTransactionActions() {
   };
 }
 
-/** Hook — returns a single transaction by ID */
 export function useTransaction(id: string): Transaction | undefined {
   const txs = useTransactions();
   return txs.find(t => t.raw.id === id);
