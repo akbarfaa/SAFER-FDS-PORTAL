@@ -56,3 +56,5 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+safer-fds-core/
+
