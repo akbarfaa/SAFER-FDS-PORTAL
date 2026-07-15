@@ -9,7 +9,7 @@ export default defineConfig(({ command }) => ({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://43.159.61.165:8000",
         changeOrigin: true,
       },
     },
@@ -31,6 +31,9 @@ export default defineConfig(({ command }) => ({
     command === "build" &&
       nitro({
         preset: process.env.NITRO_PRESET || "cloudflare-pages",
+        routeRules: {
+          "/api/**": { proxy: "http://43.159.61.165:8000/api/**" },
+        },
       }),
   ],
   resolve: {

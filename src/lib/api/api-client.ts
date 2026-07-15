@@ -18,7 +18,7 @@ const getBaseUrl = () => {
     return process.env.VITE_API_URL;
   }
   if (typeof window === "undefined") {
-    return "http://127.0.0.1:8000/api";
+    return "http://43.159.61.165:8000/api";
   }
   return "/api";
 };
