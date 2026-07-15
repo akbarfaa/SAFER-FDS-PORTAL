@@ -5,9 +5,9 @@
  * Integrates with Vite development proxy and production unified gateway.
  */
 
-// BASE URL is relative /api because Vite proxy handles routing in dev,
-// and in production the gateway maps /api routes.
-const BASE_URL = "/api";
+// In production: VITE_API_URL points to Render.com backend (e.g. https://safer-api.onrender.com/api)
+// In development: Vite proxy forwards /api to localhost:8000
+const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 export interface TransactionResponse {
   id: string;

@@ -45,8 +45,10 @@ temp_docx.txt
 *.txt
 *.py
 
-# Backend microservices (JANGAN push ke frontend repo Cloudflare Pages)
+# Database and model weights (Not in frontend portal repo)
 backend/
+MODEL AI/
+MODEL_AI/
 *.db
 *.pkl
 *.csv

@@ -40,11 +40,25 @@ export const Route = createFileRoute("/")(  {
   component: Landing,
 });
 
+function SandboxBanner() {
+  return (
+    <div className="bg-primary/10 border-b border-primary/20 text-xs text-primary py-2.5 px-4 text-center font-medium flex items-center justify-center gap-2 flex-wrap sm:flex-nowrap">
+      <span className="inline-flex items-center gap-1 rounded bg-primary px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-primary-foreground tracking-wider shrink-0">
+        Live Sandbox
+      </span>
+      <span>
+        Evaluasi Terbatas untuk Fintech & Perbankan Indonesia. Dilengkapi XGBoost + LightGBM Ensemble v2 & Explainable AI.
+      </span>
+    </div>
+  );
+}
+
 function Landing() {
   const pageRef = useReveal();
 
   return (
     <div ref={pageRef} className="min-h-screen bg-background">
+      <SandboxBanner />
       <SiteNav />
       <Hero />
       <ProblemSection />
