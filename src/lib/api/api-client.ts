@@ -5,9 +5,20 @@
  * Integrates with Vite development proxy and production unified gateway.
  */
 
-// In production: VITE_API_URL points to Render.com backend (e.g. https://safer-api.onrender.com/api)
-// In development: Vite proxy forwards /api to localhost:8000
-const BASE_URL = import.meta.env.VITE_API_URL || "/api";
+// In production: VITE_API_URL points to backend (e.g. Render.com or Hugging Face)
+// In development: Server-side rendering (SSR) requires absolute URL fallback to localhost:8000,
+// while client-side (browser) can use relative "/api" proxy.
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window === "undefined") {
+    return "http://127.0.0.1:8000/api";
+  }
+  return "/api";
+};
+
+const BASE_URL = getBaseUrl();
 
 export interface TransactionResponse {
   id: string;
