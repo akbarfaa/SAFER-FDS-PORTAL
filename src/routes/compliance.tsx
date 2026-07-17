@@ -5,8 +5,17 @@ import { Lock, ShieldCheck, FileText, KeyRound, EyeOff, Users, GitBranch, Server
 export const Route = createFileRoute("/compliance")({
   head: () => ({
     meta: [
-      { title: "Compliance & Security · SAFER" },
-      { name: "description", content: "Compliance-by-design controls aligned with UU PDP, OJK and BI." },
+      { title: "Compliance, Security & UU PDP Governance · SAFER" },
+      {
+        name: "description",
+        content:
+          "Compliance-by-design controls aligned with Indonesia's UU PDP Nomor 27 Tahun 2022, OJK POJK 11 IT risk requirements, and Bank Indonesia anti-fraud directives. Featuring PII anonymization, mTLS, and encrypted audit trails.",
+      },
+      {
+        name: "keywords",
+        content:
+          "kepatuhan uu pdp, pojk 11 ojk, pelindungan data pribadi perbankan, enkripsi data perbankan, anti-fraud reporting bank indonesia, mtls api security, data residency indonesia",
+      },
     ],
   }),
   component: CompliancePage,

@@ -24,17 +24,28 @@ import { useReveal } from "@/hooks/useReveal";
 export const Route = createFileRoute("/")(  {
   head: () => ({
     meta: [
-      { title: "SAFER — AI Fraud Intelligence for Indonesia's Digital Finance" },
+      { title: "SAFER — Smart AI Fraud & Economic Risk Intelligence Platform" },
       {
         name: "description",
         content:
-          "Enterprise AI fraud & risk engine for Indonesian banks, fintechs and e-wallets. Explainable AI, real-time monitoring and graph intelligence.",
+          "Enterprise AI Fraud Detection System (FDS) for Indonesian banks, digital banking, and fintech. Real-time transaction scoring under 150ms, Explainable AI, and Graph Intelligence.",
       },
-      { property: "og:title", content: "SAFER — AI Fraud Intelligence Platform" },
+      {
+        name: "keywords",
+        content:
+          "fraud detection system, fds perbankan, AI fraud intelligence, uu pdp compliance, bi-fast fraud prevention, qris fraud detection, mule accounts, rekening bagong, graph intelligence",
+      },
+      { property: "og:title", content: "SAFER — Smart AI Fraud & Economic Risk Intelligence" },
       {
         property: "og:description",
-        content: "Reduce fraud losses with explainable AI and graph intelligence built for Indonesia's digital financial ecosystem.",
+        content: "Stop payment fraud and money laundering in real-time with explainable AI and network graph intelligence built for Indonesia's digital finance.",
       },
+      { property: "og:image", content: "https://safer.web.id/og-image.png" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "SAFER — Smart AI Fraud & Economic Risk Intelligence" },
+      { name: "twitter:description", content: "Real-time AI Fraud Detection System for Indonesia's digital banking and fintech ecosystems." },
+      { name: "twitter:image", content: "https://safer.web.id/og-image.png" },
     ],
   }),
   component: Landing,

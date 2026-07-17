@@ -7,8 +7,17 @@ import { api } from "@/lib/api/api-client";
 export const Route = createFileRoute("/developer")({
   head: () => ({
     meta: [
-      { title: "Developer API Sandbox · SAFER" },
-      { name: "description", content: "Interactive API documentation, code boilerplate, and sandbox playground for SAFER FDS integration." },
+      { title: "Developer Hub & API Sandbox Integration · SAFER" },
+      {
+        name: "description",
+        content:
+          "Explore the SAFER FDS Developer Hub. Test stateless real-time fraud scoring API calls (/transactions/simulate) and copy ready-to-use cURL, Node.js, and Python integration boilerplate code snippets.",
+      },
+      {
+        name: "keywords",
+        content:
+          "api sandbox, fds api, documentation developer bank, nodejs axios fraud api, python requests curl fds, integration boilerplate, openapi schema transactions",
+      },
     ],
   }),
   component: DeveloperSandboxPage,

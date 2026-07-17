@@ -11,6 +11,7 @@ export const Route = createFileRoute("/simulator")({
     meta: [
       { title: "Risk Simulator · SAFER" },
       { name: "description", content: "Simulate transactions and get explainable AI fraud risk scoring." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: SimulatorPage,

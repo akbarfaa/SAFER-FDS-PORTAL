@@ -24,6 +24,7 @@ export const Route = createFileRoute("/audit")({
     meta: [
       { title: "Audit Queue · SAFER" },
       { name: "description", content: "Manual audit workflow for fraud investigation and transaction review." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: AuditPage,

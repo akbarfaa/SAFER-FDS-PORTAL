@@ -45,6 +45,7 @@ export const Route = createFileRoute("/dashboard")({
     meta: [
       { title: "Monitoring · SAFER" },
       { name: "description", content: "Real-time fraud monitoring dashboard for Indonesian financial institutions." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: DashboardPage,

@@ -25,6 +25,7 @@ export const Route = createFileRoute("/network")({
     meta: [
       { title: "Fraud Graph · SAFER" },
       { name: "description", content: "Graph intelligence visualization of fraud networks and mule accounts." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: NetworkPage,
