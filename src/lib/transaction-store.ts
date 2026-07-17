@@ -237,17 +237,20 @@ class TransactionStore {
 
   constructor() {
     if (typeof window !== "undefined") {
-      // Restore LLM config from localStorage
-      try {
-        const saved = localStorage.getItem("safer_llm_config");
-        if (saved) this._llmConfig = JSON.parse(saved);
-      } catch { /* ignore */ }
+      // Defer initialization to the next tick to prevent React hydration mismatch (Error 419)
+      setTimeout(() => {
+        // Restore LLM config from localStorage
+        try {
+          const saved = localStorage.getItem("safer_llm_config");
+          if (saved) this._llmConfig = JSON.parse(saved);
+        } catch { /* ignore */ }
 
-      // Initial load from backend database
-      this.loadInitialTransactions();
+        // Initial load from backend database
+        this.loadInitialTransactions();
 
-      // Start background polling to keep client sync with backend DB
-      this.startPolling();
+        // Start background polling to keep client sync with backend DB
+        this.startPolling();
+      }, 0);
     }
   }
 
