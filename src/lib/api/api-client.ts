@@ -9,17 +9,11 @@
 // In development: Server-side rendering (SSR) requires absolute URL fallback to localhost:8000,
 // while client-side (browser) can use relative "/api" proxy.
 const getBaseUrl = () => {
-  // Safe check for Vite's build-time env (browser / node dev)
-  if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  // Safe check for Server-side runtime env (Cloudflare / Node)
-  if (typeof process !== "undefined" && process.env && process.env.VITE_API_URL) {
-    return process.env.VITE_API_URL;
-  }
   if (typeof window === "undefined") {
+    // Server-side (SSR): Must use absolute VPS URL to avoid fetch errors
     return "http://43.159.61.165:8000/api";
   }
+  // Client-side (Browser): Use relative proxy path to avoid Mixed Content (HTTPS -> HTTP) blocking
   return "/api";
 };
 
