@@ -319,7 +319,7 @@ class TransactionStore {
     const n = count ?? this._batchSize;
     try {
       // Generate through FastAPI Data + Scoring services
-      const backendTxs = await api.generateBatch(n, this._fraudRatio);
+      const backendTxs = await api.generateBatch(n, forceHighRisk ? 1.0 : this._fraudRatio);
       const newTxs = backendTxs.map(mapBackendTx);
       this._transactions = [...newTxs, ...this._transactions];
       this._emit();
