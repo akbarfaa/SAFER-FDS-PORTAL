@@ -11,6 +11,7 @@ import {
   X,
   ClipboardList,
   Settings,
+  Code,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -27,6 +28,7 @@ const NAV = [
   { to: "/simulator", labelKey: "nav.riskSimulator", icon: Search, groupKey: "nav.operations" },
   { to: "/network", labelKey: "nav.fraudGraph", icon: Network, groupKey: "nav.operations" },
   { to: "/compliance", labelKey: "nav.compliance", icon: ShieldCheck, groupKey: "nav.governance" },
+  { to: "/developer", labelKey: "nav.sandbox", icon: Code, groupKey: "nav.platform" },
   { to: "/architecture", labelKey: "nav.architecture", icon: Cpu, groupKey: "nav.platform" },
   { to: "/business", labelKey: "nav.businessModel", icon: Briefcase, groupKey: "nav.platform" },
 ] as const;
