@@ -10,8 +10,8 @@
 // while client-side (browser) can use relative "/api" proxy.
 const getBaseUrl = () => {
   if (typeof window === "undefined") {
-    // Server-side (SSR): Must use absolute VPS URL (with nip.io to avoid Cloudflare egress raw IP blocks)
-    return "http://43.159.61.165.nip.io:8000/api";
+    // Server-side (SSR): Must use absolute VPS URL (with official domain)
+    return "https://api.safer.web.id/api";
   }
   // Client-side (Browser): Use relative proxy path to avoid Mixed Content (HTTPS -> HTTP) blocking
   return "/api";

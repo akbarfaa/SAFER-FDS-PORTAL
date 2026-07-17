@@ -40,8 +40,8 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 // Custom Edge Proxy to route /api requests to the VPS backend
 async function handleApiProxy(request: Request): Promise<Response> {
   const url = new URL(request.url);
-  // Construct the target VPS URL (using nip.io wildcard DNS domain to bypass Cloudflare raw IP fetch blocking)
-  const targetUrl = `http://43.159.61.165.nip.io:8000${url.pathname}${url.search}`;
+  // Construct the target VPS URL (using our new official secure domain api.safer.web.id)
+  const targetUrl = `https://api.safer.web.id${url.pathname}${url.search}`;
 
   // Clone headers but clean/remove headers that cause Cloudflare WAF Error 1003
   const cleanHeaders = new Headers();
