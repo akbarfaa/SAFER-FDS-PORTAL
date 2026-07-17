@@ -628,7 +628,7 @@ function Footer() {
           <div>
             <Logo />
             <p className="mt-3 max-w-md text-xs text-muted-foreground">
-              SAFER — Secure AI Fraud & Risk Engine. Built for Indonesia&apos;s digital financial ecosystem.
+              SAFER — Smart AI Fraud & Economic Risk Intelligence. Built for Indonesia&apos;s digital financial ecosystem.
             </p>
           </div>
           <div className="text-xs text-muted-foreground">
