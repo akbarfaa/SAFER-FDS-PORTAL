@@ -81,7 +81,7 @@ function DeveloperSandboxPage() {
   const handleCopyCode = () => {
     let codeText = "";
     if (activeTab === "curl") {
-      codeText = `curl -X POST https://api.safer.web.id/api/transactions/simulate \\
+      codeText = `curl -X POST https://api.safer.web.id/transactions/simulate \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(getPayload(), null, 2)}'`;
     } else if (activeTab === "node") {
@@ -89,7 +89,7 @@ function DeveloperSandboxPage() {
 
 const payload = ${JSON.stringify(getPayload(), null, 2)};
 
-axios.post('https://api.safer.web.id/api/transactions/simulate', payload)
+axios.post('https://api.safer.web.id/transactions/simulate', payload)
   .then(response => {
     console.log('Risk Score:', response.data.risk_score);
     console.log('Severity:', response.data.severity);
@@ -102,7 +102,7 @@ axios.post('https://api.safer.web.id/api/transactions/simulate', payload)
 payload = ${JSON.stringify(getPayload(), null, 2)}
 
 response = requests.post(
-    'https://api.safer.web.id/api/transactions/simulate',
+    'https://api.safer.web.id/transactions/simulate',
     json=payload
 )
 
@@ -167,7 +167,7 @@ if response.status_code == 200:
               <div className="border border-border rounded-md overflow-hidden">
                 <div className="bg-muted/30 px-3 py-2 flex items-center gap-2 border-b border-border">
                   <span className="bg-indigo-600/20 text-indigo-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase">POST</span>
-                  <code className="text-xs font-mono text-foreground font-semibold">/api/transactions/simulate</code>
+                  <code className="text-xs font-mono text-foreground font-semibold">/transactions/simulate</code>
                 </div>
                 <div className="p-3 text-xs text-muted-foreground leading-relaxed">
                   Menilai skor risiko fraud transaksi digital secara <strong>stateless</strong> (tanpa menyimpan data ke database). Digunakan untuk integrasi uji coba awal tim IT bank.
@@ -178,7 +178,7 @@ if response.status_code == 200:
               <div className="border border-border rounded-md overflow-hidden">
                 <div className="bg-muted/30 px-3 py-2 flex items-center gap-2 border-b border-border">
                   <span className="bg-success/20 text-success text-[10px] font-bold px-2 py-0.5 rounded uppercase">POST</span>
-                  <code className="text-xs font-mono text-foreground font-semibold">/api/transactions</code>
+                  <code className="text-xs font-mono text-foreground font-semibold">/transactions</code>
                 </div>
                 <div className="p-3 text-xs text-muted-foreground leading-relaxed">
                   Menilai skor risiko transaksi dan <strong>menyimpannya secara permanen</strong> di database FDS. Transaksi yang mencurigakan otomatis memicu alert merah di dashboard analis.
@@ -223,16 +223,16 @@ if response.status_code == 200:
             <div className="p-4 bg-[#090d16] overflow-x-auto max-h-[350px]">
               <pre className="text-xs font-mono text-indigo-200 leading-relaxed">
                 {activeTab === "curl" && (
-                  `curl -X POST https://api.safer.web.id/api/transactions/simulate \\
+                  `curl -X POST https://api.safer.web.id/transactions/simulate \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(getPayload(), null, 2)}'`
                 )}
                 {activeTab === "node" && (
                   `const axios = require('axios');
-
+ 
 const payload = ${JSON.stringify(getPayload(), null, 2)};
-
-axios.post('https://api.safer.web.id/api/transactions/simulate', payload)
+ 
+axios.post('https://api.safer.web.id/transactions/simulate', payload)
   .then(response => {
     console.log('Risk Score:', response.data.risk_score);
     console.log('Severity:', response.data.severity);
@@ -242,14 +242,14 @@ axios.post('https://api.safer.web.id/api/transactions/simulate', payload)
                 )}
                 {activeTab === "python" && (
                   `import requests
-
+ 
 payload = ${JSON.stringify(getPayload(), null, 2)}
-
+ 
 response = requests.post(
-    'https://api.safer.web.id/api/transactions/simulate',
+    'https://api.safer.web.id/transactions/simulate',
     json=payload
 )
-
+ 
 if response.status_code == 200:
     data = response.json()
     print(f"Risk Score: {data['risk_score']}")
