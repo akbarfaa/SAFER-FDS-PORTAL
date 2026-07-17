@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /compliance
+Allow: /developer
+Allow: /architecture
+Allow: /business
+Disallow: /dashboard
+Disallow: /audit
+Disallow: /simulator
+Disallow: /network
+
+Sitemap: https://safer.web.id/sitemap.xml
