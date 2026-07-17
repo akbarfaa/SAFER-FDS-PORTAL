@@ -118,8 +118,10 @@ export function txRail(t: Transaction) { return t.raw.rail; }
 
 export function mapBackendTx(b: TransactionResponse): Transaction {
   const indicators: Indicator[] = [];
+  let primaryRiskFactors: string[] = [];
   try {
     const factors = JSON.parse(b.primary_risk_factors || "[]");
+    primaryRiskFactors = factors.map((f: any) => f.label || String(f.feature || ""));
     factors.forEach((f: any) => {
       indicators.push({
         id: f.feature,
@@ -147,10 +149,13 @@ export function mapBackendTx(b: TransactionResponse): Transaction {
         else if (k.includes("beneficiary")) category = "network";
         else if (k.includes("value")) category = "transaction";
 
+        const label = k.replace("is_", "").replace(/_/g, " ");
+        primaryRiskFactors.push(label);
+
         indicators.push({
           id: k,
-          label: k.replace("is_", "").replace(/_/g, " "),
-          detail: k.replace("is_", "").replace(/_/g, " "),
+          label: label,
+          detail: label,
           weight: 10,
           maxWeight: 10,
           hit: true,
@@ -212,6 +217,7 @@ export function mapBackendTx(b: TransactionResponse): Transaction {
       lgbProbability: b.lgb_probability,
       indicators: indicators,
       suggestedAction: b.suggested_action,
+      primaryRiskFactors: primaryRiskFactors,
     },
     aiReasoning: b.ai_reasoning,
     isReasoningLoading: false,

@@ -297,6 +297,8 @@ export interface RawTransaction {
   receiverBank: string;
   receiverCity: string;
   receiverProvince: string;
+  receiverLat?: number;
+  receiverLng?: number;
   // Transaction
   amount: number;
   rail: PaymentRail;
