@@ -317,6 +317,20 @@ export interface RawTransaction {
   accountAgeDays: number;
   // Fraud signal hints (for scoring engine to consume)
   _hints: FraudHints;
+  // Flat indicators mapped from backend
+  isVelocityAnomaly?: boolean;
+  isGeoMismatch?: boolean;
+  isOffHours?: boolean;
+  isHighValueForRail?: boolean;
+  isSuspiciousIp?: boolean;
+  isRiskyMerchant?: boolean;
+  isNewAccount?: boolean;
+  hasFailedAttempts?: boolean;
+  isDeviceMismatch?: boolean;
+  isSimSwap?: boolean;
+  isUnusualBeneficiary?: boolean;
+  velocityCount?: number;
+  geoDistanceKm?: number;
 }
 
 export interface FraudHints {
