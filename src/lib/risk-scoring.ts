@@ -26,6 +26,8 @@ export interface ScoringResult {
   suggestedAction: string;
   fraudProbability: number;
   primaryRiskFactors: string[];
+  xgbProbability?: number;
+  lgbProbability?: number;
 }
 
 // ─── Amount thresholds per rail (values above are "high") ───────────────────

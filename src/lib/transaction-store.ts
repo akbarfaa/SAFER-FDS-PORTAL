@@ -127,7 +127,8 @@ export function mapBackendTx(b: TransactionResponse): Transaction {
         detail: f.label,
         weight: Math.round(f.shap_value * 100),
         maxWeight: 100,
-        hit: true
+        hit: true,
+        category: "behavioral"
       });
     });
   } catch (e) {
@@ -140,13 +141,20 @@ export function mapBackendTx(b: TransactionResponse): Transaction {
     ];
     keys.forEach(k => {
       if (b[k] === true) {
+        let category: Indicator["category"] = "behavioral";
+        if (k.includes("device") || k.includes("sim")) category = "device";
+        else if (k.includes("account") || k.includes("failed")) category = "account";
+        else if (k.includes("beneficiary")) category = "network";
+        else if (k.includes("value")) category = "transaction";
+
         indicators.push({
           id: k,
           label: k.replace("is_", "").replace(/_/g, " "),
           detail: k.replace("is_", "").replace(/_/g, " "),
           weight: 10,
           maxWeight: 10,
-          hit: true
+          hit: true,
+          category: category
         });
       }
     });
@@ -172,7 +180,7 @@ export function mapBackendTx(b: TransactionResponse): Transaction {
       receiverLng: b.receiver_lng,
       amount: b.amount,
       rail: b.payment_rail as any,
-      ewalletProvider: b.ewallet_provider,
+      ewalletProvider: b.ewallet_provider as any,
       merchant: b.merchant,
       merchantCategory: b.merchant_category,
       channel: b.channel,
