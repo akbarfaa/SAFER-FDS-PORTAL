@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/safer/AppShell";
 import { useState } from "react";
-import { Code, Terminal, Check, Copy, Play, AlertTriangle, Cpu, FileText, Info, Key } from "lucide-react";
+import { Code, Terminal, Check, Copy, Play, AlertTriangle, Cpu, FileText, Info, Key, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/api/api-client";
 import { LeadRegistrationModal } from "@/components/safer/LeadRegistrationModal";
 
@@ -308,9 +308,9 @@ if response.status_code == 200:
                   <Key className="h-3.5 w-3.5 text-primary" /> Kredensial API Partner (Opsional)
                 </h4>
                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
-                  clientId && clientSecret ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"
+                  clientId && clientSecret ? "bg-success/20 text-success border border-success/30 animate-pulse" : "bg-muted text-muted-foreground border border-border"
                 }`}>
-                  {clientId && clientSecret ? "Partner Mode" : "Anonymous Mode"}
+                  {clientId && clientSecret ? "Partner Mode (Unlocked)" : "Anonymous Mode (Limited)"}
                 </span>
               </div>
               
@@ -346,6 +346,29 @@ if response.status_code == 200:
                 >
                   Registrasi Instan Di Sini &rarr;
                 </button>
+              </div>
+
+              {/* Dynamic Quota Information Banner */}
+              <div className={`mt-2 p-3 rounded border text-[11px] leading-relaxed transition-all duration-300 ${
+                clientId && clientSecret 
+                  ? "bg-success/10 border-success/30 text-success-foreground" 
+                  : "bg-primary/5 border-primary/20 text-muted-foreground"
+              }`}>
+                {clientId && clientSecret ? (
+                  <div className="flex gap-2">
+                    <ShieldCheck className="h-4 w-4 text-success flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-success">Partner Sandbox Active:</span> Kredensial terverifikasi. Kuota limit khusus instansi partner diaktifkan (unlocked hingga <strong>10.000 req/menit</strong> di cluster cloud staging) untuk memfasilitasi pengujian mobile banking terintegrasi.
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold text-foreground">Anonymous Mode:</span> Menggunakan sandbox publik bersama (Rate limit <strong>200 req/jam</strong>). Klik tombol registrasi di atas untuk menaikkan kuota dan mendapatkan credential partner khusus secara instan.
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             
