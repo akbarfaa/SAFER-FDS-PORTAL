@@ -41,11 +41,17 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   
+  // Read B2B mode state
+  const isB2b = typeof window !== "undefined" ? (localStorage.getItem("safer_b2b_enabled") === "true") : false;
+  
   // Read role from localStorage
-  const savedRole = typeof window !== "undefined" ? (localStorage.getItem("safer_role") || "admin") : "admin";
+  const savedRole = typeof window !== "undefined" 
+    ? (isB2b ? (localStorage.getItem("safer_role") || "admin") : "admin") 
+    : "admin";
   
   // Filter navigation items based on active simulation role
   const filteredNav = NAV.filter((item) => {
+    if (!isB2b) return true; // Show all to judges in public mode
     if (savedRole === "analyst") {
       return item.groupKey === "nav.operations";
     }
@@ -198,7 +204,7 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
         <main className="flex-1 px-4 md:px-6 py-6">{children}</main>
       </div>
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <RoleSwitcher />
+      {isB2b && <RoleSwitcher />}
     </div>
   );
 }
