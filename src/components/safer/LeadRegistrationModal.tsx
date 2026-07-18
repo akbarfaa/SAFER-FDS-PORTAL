@@ -33,7 +33,7 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
     setLoading(true);
     try {
       // POST registration data directly to the proxy leads endpoint
-      const response = await fetch("/api/leads", {
+      const response = await fetch("https://api.safer.web.id/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
