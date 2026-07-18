@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SimulatorRouteImport } from './routes/simulator'
+import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as NetworkRouteImport } from './routes/network'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -22,6 +23,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SimulatorRoute = SimulatorRouteImport.update({
   id: '/simulator',
   path: '/simulator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NetworkRoute = NetworkRouteImport.update({
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/developer': typeof DeveloperRoute
   '/network': typeof NetworkRoute
+  '/resources': typeof ResourcesRoute
   '/simulator': typeof SimulatorRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/developer': typeof DeveloperRoute
   '/network': typeof NetworkRoute
+  '/resources': typeof ResourcesRoute
   '/simulator': typeof SimulatorRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/developer': typeof DeveloperRoute
   '/network': typeof NetworkRoute
+  '/resources': typeof ResourcesRoute
   '/simulator': typeof SimulatorRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/developer'
     | '/network'
+    | '/resources'
     | '/simulator'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/developer'
     | '/network'
+    | '/resources'
     | '/simulator'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/developer'
     | '/network'
+    | '/resources'
     | '/simulator'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DeveloperRoute: typeof DeveloperRoute
   NetworkRoute: typeof NetworkRoute
+  ResourcesRoute: typeof ResourcesRoute
   SimulatorRoute: typeof SimulatorRoute
 }
 
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/simulator'
       fullPath: '/simulator'
       preLoaderRoute: typeof SimulatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/network': {
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DeveloperRoute: DeveloperRoute,
   NetworkRoute: NetworkRoute,
+  ResourcesRoute: ResourcesRoute,
   SimulatorRoute: SimulatorRoute,
 }
 export const routeTree = rootRouteImport
