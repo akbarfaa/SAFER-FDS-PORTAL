@@ -401,12 +401,8 @@ function DashboardPreview() {
               Open monitoring dashboard <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="reveal reveal-delay-2 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
-            <img
-              alt="SAFER dashboard preview"
-              className="w-full"
-              src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMock())}`}
-            />
+          <div className="reveal reveal-delay-2">
+            <PremiumDashboardMockup />
           </div>
         </div>
       </div>
@@ -414,26 +410,125 @@ function DashboardPreview() {
   );
 }
 
-function svgMock() {
-  return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 380'>
-  <rect width='600' height='380' fill='#0f1729'/>
-  <rect x='0' y='0' width='600' height='40' fill='#1a2540'/>
-  <circle cx='20' cy='20' r='4' fill='#3b82f6'/>
-  <text x='32' y='25' fill='#e2e8f0' font-family='Inter' font-size='12' font-weight='600'>SAFER · Monitoring</text>
-  <rect x='20' y='60' width='175' height='80' rx='6' fill='#1a2540'/>
-  <text x='32' y='82' fill='#94a3b8' font-size='10'>Flagged today</text>
-  <text x='32' y='112' fill='#e2e8f0' font-size='22' font-weight='700'>3,471</text>
-  <rect x='210' y='60' width='175' height='80' rx='6' fill='#1a2540'/>
-  <text x='222' y='82' fill='#94a3b8' font-size='10'>Blocked losses</text>
-  <text x='222' y='112' fill='#10b981' font-size='22' font-weight='700'>Rp 9.2B</text>
-  <rect x='400' y='60' width='180' height='80' rx='6' fill='#1a2540'/>
-  <text x='412' y='82' fill='#94a3b8' font-size='10'>Avg score</text>
-  <text x='412' y='112' fill='#e2e8f0' font-size='22' font-weight='700'>34.2</text>
-  <rect x='20' y='160' width='560' height='200' rx='8' fill='#1a2540'/>
-  <text x='32' y='180' fill='#e2e8f0' font-size='11' font-weight='600'>Risk trend (14d)</text>
-  <polyline fill='none' stroke='#3b82f6' stroke-width='2' points='40,330 80,300 120,310 160,270 200,290 240,240 280,250 320,210 360,230 400,200 440,180 480,210 520,170 560,200'/>
-  <polyline fill='none' stroke='#ef4444' stroke-width='2' points='40,340 80,335 120,330 160,320 200,322 240,315 280,310 320,300 360,305 400,295 440,290 480,288 520,280 560,275'/>
-</svg>`;
+function PremiumDashboardMockup() {
+  return (
+    <div className="w-full overflow-hidden rounded-xl border border-border bg-card shadow-2xl shadow-primary/5">
+      {/* Mac window header */}
+      <div className="flex items-center gap-2 border-b border-border bg-surface px-4 py-2.5">
+        <div className="flex gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-destructive/40" />
+          <span className="h-2.5 w-2.5 rounded-full bg-warning/40" />
+          <span className="h-2.5 w-2.5 rounded-full bg-success/40" />
+        </div>
+        <div className="ml-3 font-mono text-[11px] text-muted-foreground">safer.console / monitoring</div>
+      </div>
+
+      {/* Grid: 3 Metric Cards */}
+      <div className="grid grid-cols-3 gap-px bg-border">
+        {[
+          { l: "Transactions today", v: "1,284,902", t: "+8.4%", icon: TrendingUp, tone: "text-success" },
+          { l: "Flagged events", v: "3,471", t: "0.27% rate", icon: AlertTriangle, tone: "text-warning" },
+          { l: "Blocked losses", v: "Rp 9.2 B", t: "this month", icon: ShieldCheck, tone: "text-primary" },
+        ].map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.l} className="bg-card p-4">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span className="truncate max-w-[80px] sm:max-w-none">{c.l}</span>
+                <Icon className={`h-3.5 w-3.5 ${c.tone} flex-shrink-0`} />
+              </div>
+              <div className="num mt-1.5 text-lg sm:text-xl font-bold tracking-tight">{c.v}</div>
+              <div className="mt-0.5 text-[10px] text-muted-foreground">{c.t}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom section: Split Alerts & Charts */}
+      <div className="grid gap-px border-t border-border bg-border sm:grid-cols-2">
+        {/* Column 1: Live Alerts Stream */}
+        <div className="bg-card p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Live alert stream</div>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" /> Streaming
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {[
+              { id: "TX-99214", reason: "Velocity anomaly + new device", sev: "critical", amount: "Rp 48.2M" },
+              { id: "TX-99213", reason: "QRIS risk elevated", sev: "high", amount: "Rp 12.7M" },
+              { id: "TX-99212", reason: "Geolocation mismatch", sev: "medium", amount: "Rp 3.4M" },
+            ].map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center justify-between rounded border border-border bg-surface px-2.5 py-1.5 text-xs"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+                      a.sev === "critical" ? "bg-critical" : a.sev === "high" ? "bg-destructive" : "bg-warning"
+                    }`}
+                  />
+                  <span className="font-mono text-[9px] text-muted-foreground flex-shrink-0">{a.id}</span>
+                  <span className="truncate text-[11px] text-muted-foreground">{a.reason}</span>
+                </div>
+                <span className="num text-[10px] text-muted-foreground pl-1 flex-shrink-0">{a.amount}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Column 2: Beautiful SVG Area Chart */}
+        <div className="bg-card p-4 flex flex-col justify-between">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Risk trend (14d)</div>
+            <div className="text-[10px] text-primary font-semibold">Peak: 84%</div>
+          </div>
+          
+          {/* Custom SVG Line & Area chart */}
+          <div className="relative h-20 w-full mt-1">
+            <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              {/* Grid Lines */}
+              <line x1="0" y1="10" x2="100" y2="10" stroke="var(--border)" strokeWidth="0.1" strokeDasharray="1,1" />
+              <line x1="0" y1="20" x2="100" y2="20" stroke="var(--border)" strokeWidth="0.1" strokeDasharray="1,1" />
+              <line x1="0" y1="30" x2="100" y2="30" stroke="var(--border)" strokeWidth="0.1" strokeDasharray="1,1" />
+              
+              {/* Area path */}
+              <path
+                d="M 0 35 Q 10 25, 20 28 T 40 15 T 60 20 T 80 10 T 100 5 L 100 40 L 0 40 Z"
+                fill="url(#chartGradient)"
+              />
+              {/* Line path */}
+              <path
+                d="M 0 35 Q 10 25, 20 28 T 40 15 T 60 20 T 80 10 T 100 5"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              />
+              {/* Highlight Circle */}
+              <circle cx="80" cy="10" r="1.5" fill="var(--primary)" className="animate-pulse" />
+            </svg>
+          </div>
+          
+          {/* Chart X Axis Labels */}
+          <div className="mt-1.5 flex justify-between text-[9px] text-muted-foreground font-mono">
+            <span>05 Jul</span>
+            <span>09 Jul</span>
+            <span>13 Jul</span>
+            <span>17 Jul</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ═══════════════════ Integration Flow ═══════════════════ */
