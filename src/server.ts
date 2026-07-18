@@ -73,7 +73,7 @@ async function handleApiProxy(request: Request): Promise<Response> {
     const newHeaders = new Headers(proxyResponse.headers);
     newHeaders.set("Access-Control-Allow-Origin", "*");
     newHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-    newHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    newHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Client-ID, X-Client-Secret");
 
     return new Response(proxyResponse.body, {
       status: proxyResponse.status,
@@ -102,7 +102,7 @@ export default {
           headers: {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-ID, X-Client-Secret",
           },
         });
       }
