@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/safer/AppShell";
 import { useState } from "react";
-import { Code, Terminal, Check, Copy, Play, AlertTriangle, Cpu, FileText, Info } from "lucide-react";
+import { Code, Terminal, Check, Copy, Play, AlertTriangle, Cpu, FileText, Info, Key } from "lucide-react";
 import { api } from "@/lib/api/api-client";
+import { LeadRegistrationModal } from "@/components/safer/LeadRegistrationModal";
 
 export const Route = createFileRoute("/developer")({
   head: () => ({
@@ -27,6 +28,11 @@ function DeveloperSandboxPage() {
   const [activeTab, setActiveTab] = useState<"curl" | "node" | "python">("curl");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Credentials & Modal State
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Playground Form State
   const [amount, setAmount] = useState(2500000);
@@ -92,13 +98,16 @@ function DeveloperSandboxPage() {
     if (activeTab === "curl") {
       codeText = `curl -X POST https://api.safer.web.id/transactions/simulate \\
   -H "Content-Type: application/json" \\
-  -d '${JSON.stringify(getPayload(), null, 2)}'`;
+  ${clientId ? `-H "X-Client-ID: ${clientId}" \\\n  -H "X-Client-Secret: ${clientSecret}" \\\n  ` : ""}-d '${JSON.stringify(getPayload(), null, 2)}'`;
     } else if (activeTab === "node") {
       codeText = `const axios = require('axios');
 
 const payload = ${JSON.stringify(getPayload(), null, 2)};
+const headers = {
+  'Content-Type': 'application/json'${clientId ? `,\n  'X-Client-ID': '${clientId}',\n  'X-Client-Secret': '${clientSecret}'` : ""}
+};
 
-axios.post('https://api.safer.web.id/transactions/simulate', payload)
+axios.post('https://api.safer.web.id/transactions/simulate', payload, { headers })
   .then(response => {
     console.log('Risk Score:', response.data.risk_score);
     console.log('Severity:', response.data.severity);
@@ -109,10 +118,14 @@ axios.post('https://api.safer.web.id/transactions/simulate', payload)
       codeText = `import requests
 
 payload = ${JSON.stringify(getPayload(), null, 2)}
+headers = {
+    'Content-Type': 'application/json'${clientId ? `,\n    'X-Client-ID': '${clientId}',\n    'X-Client-Secret': '${clientSecret}'` : ""}
+}
 
 response = requests.post(
     'https://api.safer.web.id/transactions/simulate',
-    json=payload
+    json=payload,
+    headers=headers
 )
 
 if response.status_code == 200:
@@ -132,7 +145,11 @@ if response.status_code == 200:
     setApiResponse(null);
     try {
       const payload = getPayload();
-      const res = await api.simulateTransaction(payload);
+      const headers: Record<string, string> = {};
+      if (clientId) headers["X-Client-ID"] = clientId;
+      if (clientSecret) headers["X-Client-Secret"] = clientSecret;
+      
+      const res = await api.simulateTransaction(payload, headers);
       setApiResponse(res);
     } catch (err: any) {
       setApiResponse({
@@ -234,14 +251,17 @@ if response.status_code == 200:
                 {activeTab === "curl" && (
                   `curl -X POST https://api.safer.web.id/transactions/simulate \\
   -H "Content-Type: application/json" \\
-  -d '${JSON.stringify(getPayload(), null, 2)}'`
+  ${clientId ? `-H "X-Client-ID: ${clientId}" \\\n  -H "X-Client-Secret: ${clientSecret}" \\\n  ` : ""}-d '${JSON.stringify(getPayload(), null, 2)}'`
                 )}
                 {activeTab === "node" && (
                   `const axios = require('axios');
  
 const payload = ${JSON.stringify(getPayload(), null, 2)};
+const headers = {
+  'Content-Type': 'application/json'${clientId ? `,\n  'X-Client-ID': '${clientId}',\n  'X-Client-Secret': '${clientSecret}'` : ""}
+};
  
-axios.post('https://api.safer.web.id/transactions/simulate', payload)
+axios.post('https://api.safer.web.id/transactions/simulate', payload, { headers })
   .then(response => {
     console.log('Risk Score:', response.data.risk_score);
     console.log('Severity:', response.data.severity);
@@ -253,10 +273,14 @@ axios.post('https://api.safer.web.id/transactions/simulate', payload)
                   `import requests
  
 payload = ${JSON.stringify(getPayload(), null, 2)}
+headers = {
+    'Content-Type': 'application/json'${clientId ? `,\n    'X-Client-ID': '${clientId}',\n    'X-Client-Secret': '${clientSecret}'` : ""}
+}
  
 response = requests.post(
     'https://api.safer.web.id/transactions/simulate',
-    json=payload
+    json=payload,
+    headers=headers
 )
  
 if response.status_code == 200:
@@ -269,13 +293,61 @@ if response.status_code == 200:
             </div>
           </div>
         </div>
-
+ 
         {/* ─── Right Column: Interactive Sandbox Playground ─── */}
         <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card p-5">
             <h3 className="text-base font-semibold flex items-center gap-2 border-b border-border pb-4">
               <Terminal className="h-4 w-4 text-warning" /> Interactive Sandbox Playground
             </h3>
+
+            {/* API Credentials Setup */}
+            <div className="mt-4 p-4 rounded-lg border border-border bg-surface/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                  <Key className="h-3.5 w-3.5 text-primary" /> Kredensial API Partner (Opsional)
+                </h4>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${
+                  clientId && clientSecret ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"
+                }`}>
+                  {clientId && clientSecret ? "Partner Mode" : "Anonymous Mode"}
+                </span>
+              </div>
+              
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-[10px] text-muted-foreground uppercase mb-1">X-Client-ID</label>
+                  <input
+                    type="text"
+                    placeholder="sfr_client_xxxx"
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    className="w-full rounded border border-border bg-background px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-muted-foreground uppercase mb-1">X-Client-Secret</label>
+                  <input
+                    type="password"
+                    placeholder="sfr_secret_xxxx"
+                    value={clientSecret}
+                    onChange={(e) => setClientSecret(e.target.value)}
+                    className="w-full rounded border border-border bg-background px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-1.5 border-t border-border/50 text-[11px] text-muted-foreground">
+                <span>Belum punya kredensial sandbox?</span>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
+                  className="font-semibold text-primary hover:underline"
+                >
+                  Registrasi Instan Di Sini &rarr;
+                </button>
+              </div>
+            </div>
             
             {/* Input Form Fields */}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -438,6 +510,7 @@ if response.status_code == 200:
           </div>
         </div>
       </div>
+      <LeadRegistrationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </AppShell>
   );
 }

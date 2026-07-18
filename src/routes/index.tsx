@@ -20,6 +20,8 @@ import { Logo } from "@/components/safer/Logo";
 import { ThemeToggle } from "@/components/safer/ThemeToggle";
 import { Tour } from "@/components/safer/Tour";
 import { useReveal } from "@/hooks/useReveal";
+import { useState } from "react";
+import { LeadRegistrationModal } from "@/components/safer/LeadRegistrationModal";
 
 export const Route = createFileRoute("/")(  {
   head: () => ({
@@ -66,12 +68,13 @@ function SandboxBanner() {
 
 function Landing() {
   const pageRef = useReveal();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div ref={pageRef} className="min-h-screen bg-background">
       <SandboxBanner />
-      <SiteNav />
-      <Hero />
+      <SiteNav onDemoRequest={() => setIsModalOpen(true)} />
+      <Hero onDemoRequest={() => setIsModalOpen(true)} />
       <ProblemSection />
       <CapabilitiesSection />
       <DashboardPreview />
@@ -79,13 +82,14 @@ function Landing() {
       <RegulatorySection />
       <BusinessSection />
       <EcosystemVision />
-      <CTA />
+      <CTA onDemoRequest={() => setIsModalOpen(true)} />
       <Footer />
+      <LeadRegistrationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }
 
-function SiteNav() {
+function SiteNav({ onDemoRequest }: { onDemoRequest: () => void }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -101,6 +105,12 @@ function SiteNav() {
         <div className="flex items-center gap-2">
           <Tour />
           <ThemeToggle />
+          <button
+            onClick={onDemoRequest}
+            className="inline-flex h-9 items-center gap-1 rounded-md border border-border bg-card px-3 text-xs font-semibold hover:bg-accent transition-colors"
+          >
+            Request Demo
+          </button>
           <Link
             to="/dashboard"
             className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
@@ -115,7 +125,7 @@ function SiteNav() {
 
 /* ═══════════════════ Hero ═══════════════════ */
 
-function Hero() {
+function Hero({ onDemoRequest }: { onDemoRequest: () => void }) {
   return (
     <section className="relative overflow-hidden border-b border-border min-h-[calc(100vh-4rem)] flex flex-col justify-center py-12 md:py-16">
       {/* Background layers */}
@@ -147,9 +157,15 @@ function Hero() {
             >
               Try the Risk Simulator <ArrowRight className="h-4 w-4" />
             </Link>
+            <button
+              onClick={onDemoRequest}
+              className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-card px-5 text-sm font-medium transition-colors hover:bg-accent"
+            >
+              Request Demo & API Key
+            </button>
             <Link
               to="/dashboard"
-              className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-card px-5 text-sm font-medium transition-colors hover:bg-accent"
+              className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-transparent px-5 text-sm font-medium transition-colors hover:bg-accent/10"
             >
               View Live Dashboard
             </Link>
@@ -695,7 +711,7 @@ function EcosystemVision() {
 
 /* ═══════════════════ CTA ═══════════════════ */
 
-function CTA() {
+function CTA({ onDemoRequest }: { onDemoRequest: () => void }) {
   return (
     <section className="border-b border-border min-h-[calc(100vh-4rem)] flex flex-col justify-center py-16">
       <div className="mx-auto max-w-5xl px-6 py-20 text-center">
@@ -712,9 +728,15 @@ function CTA() {
           >
             Launch Risk Simulator <ArrowRight className="h-4 w-4" />
           </Link>
+          <button
+            onClick={onDemoRequest}
+            className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-card px-5 text-sm font-medium transition-all hover:bg-accent hover:border-primary/45"
+          >
+            Hubungi Kami & Request Key
+          </button>
           <Link
             to="/network"
-            className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-card px-5 text-sm font-medium transition-colors hover:bg-accent"
+            className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-transparent px-5 text-sm font-medium transition-colors hover:bg-accent/10"
           >
             Explore Fraud Graph
           </Link>

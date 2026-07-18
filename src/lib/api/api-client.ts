@@ -201,10 +201,11 @@ export const api = {
     });
   },
 
-  simulateTransaction: async (txData: any): Promise<any> => {
+  simulateTransaction: async (txData: any, headers?: Record<string, string>): Promise<any> => {
     return request(`/transactions/simulate`, {
       method: "POST",
       body: JSON.stringify(txData),
+      headers,
     });
   },
 

@@ -35,10 +35,27 @@ const NAV = [
   { to: "/business", labelKey: "nav.businessModel", icon: Briefcase, groupKey: "nav.platform" },
 ] as const;
 
+import { RoleSwitcher } from "./RoleSwitcher";
+
 export function AppShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const groups = Array.from(new Set(NAV.map((n) => n.groupKey)));
+  
+  // Read role from localStorage
+  const savedRole = typeof window !== "undefined" ? (localStorage.getItem("safer_role") || "admin") : "admin";
+  
+  // Filter navigation items based on active simulation role
+  const filteredNav = NAV.filter((item) => {
+    if (savedRole === "analyst") {
+      return item.groupKey === "nav.operations";
+    }
+    if (savedRole === "compliance") {
+      return item.groupKey === "nav.operations" || item.groupKey === "nav.governance";
+    }
+    return true; // admin
+  });
+
+  const groups = Array.from(new Set(filteredNav.map((n) => n.groupKey)));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   let pendingCount = 0;
@@ -67,7 +84,7 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
               {t(g)}
             </div>
             <ul className="space-y-0.5">
-              {NAV.filter((n) => n.groupKey === g).map((n) => {
+              {filteredNav.filter((n) => n.groupKey === g).map((n) => {
                 const active = pathname === n.to;
                 const Icon = n.icon;
                 return (
@@ -181,6 +198,7 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
         <main className="flex-1 px-4 md:px-6 py-6">{children}</main>
       </div>
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <RoleSwitcher />
     </div>
   );
 }
