@@ -235,105 +235,181 @@ function NetworkPage() {
     const renderScenario = async () => {
       setSelected(null);
       setHovered(null);
+      setLoading(true);
 
-      if (scenario.id === "live-fds") {
-        setLoading(true);
-        try {
-          // Map local store transactions to simple models for the API
-          const payload = allTxs.map(t => ({
-            id: t.raw.id,
-            amount: t.raw.amount,
-            payment_rail: t.raw.rail,
-            severity: t.scoring.severity,
-            sender_account: t.raw.senderAccount,
-            sender_name: t.raw.senderName,
-            sender_bank: t.raw.senderBank,
-            sender_city: t.raw.senderCity,
-            receiver_account: t.raw.receiverAccount,
-            receiver_name: t.raw.receiverName,
-            receiver_bank: t.raw.receiverBank,
-            receiver_city: t.raw.receiverCity,
-            merchant: t.raw.merchant,
-            merchant_category: t.raw.merchantCategory,
-            device_brand: t.raw.deviceBrand,
-            device_type: t.raw.deviceType,
-            device_fingerprint: t.raw.deviceFingerprint,
-            ip_address: t.raw.ipAddress,
-          }));
+      try {
+        // Map local store transactions to simple models for the API
+        const payload = allTxs.map(t => ({
+          id: t.raw.id,
+          amount: t.raw.amount,
+          payment_rail: t.raw.rail,
+          severity: t.scoring.severity,
+          sender_account: t.raw.senderAccount,
+          sender_name: t.raw.senderName,
+          sender_bank: t.raw.senderBank,
+          sender_city: t.raw.senderCity,
+          receiver_account: t.raw.receiverAccount,
+          receiver_name: t.raw.receiverName,
+          receiver_bank: t.raw.receiverBank,
+          receiver_city: t.raw.receiverCity,
+          merchant: t.raw.merchant,
+          merchant_category: t.raw.merchantCategory,
+          device_brand: t.raw.deviceBrand,
+          device_type: t.raw.deviceType,
+          device_fingerprint: t.raw.deviceFingerprint,
+          ip_address: t.raw.ipAddress,
+        }));
 
-          const res = await api.analyzeGraph(payload);
-          setDynamicNodes(res.nodes);
-          setDynamicEdges(res.edges);
-          setDynamicInsights(res.insights);
-          if (res.nodes.length > 0) {
-            setSelected(res.nodes[0]);
+        const res = await api.analyzeGraph(payload);
+        
+        let filteredNodes = [...res.nodes];
+        let filteredEdges = [...res.edges];
+        let filteredInsights = [...res.insights];
+        let useFallback = false;
+
+        if (scenario.id === "mule-ring") {
+          const collectors = res.nodes.filter(n => n.details?.["Status"] === "MULE RING COLLECTOR");
+          if (collectors.length > 0) {
+            const collectorIds = new Set(collectors.map(c => c.id));
+            const neighborIds = new Set<string>();
+            res.edges.forEach(e => {
+              if (collectorIds.has(e.from)) neighborIds.add(e.to);
+              if (collectorIds.has(e.to)) neighborIds.add(e.from);
+            });
+            const keepIds = new Set([...collectorIds, ...neighborIds]);
+            filteredNodes = res.nodes.filter(n => keepIds.has(n.id));
+            filteredEdges = res.edges.filter(e => keepIds.has(e.from) && keepIds.has(e.to));
+            filteredInsights = [
+              "🔴 LIVE NETWORK: Terdeteksi jaringan rekening penampung (Mule Ring) aktif di database.",
+              ...res.insights.filter(ins => ins.includes("Mule") || ins.includes("Fan-In"))
+            ];
+          } else {
+            useFallback = true;
           }
-        } catch (err) {
-          console.error("[NetworkGraph] Dynamic graph analysis failed:", err);
-          showToast("Gagal memproses analisis graf live backend.", "warning");
-          // fallback empty
-          setDynamicNodes([]);
-          setDynamicEdges([]);
-          setDynamicInsights(["Tidak dapat terhubung ke Scoring / Graph service. Nyalakan backend service untuk melihat visualisasi live."]);
-        } finally {
-          setLoading(false);
+        } else if (scenario.id === "device-sharing") {
+          const deviceHubs = res.nodes.filter(n => n.details?.["Status"] === "DEVICE FARM HUB");
+          if (deviceHubs.length > 0) {
+            const hubIds = new Set(deviceHubs.map(h => h.id));
+            const neighborIds = new Set<string>();
+            res.edges.forEach(e => {
+              if (hubIds.has(e.from)) neighborIds.add(e.to);
+              if (hubIds.has(e.to)) neighborIds.add(e.from);
+            });
+            const keepIds = new Set([...hubIds, ...neighborIds]);
+            filteredNodes = res.nodes.filter(n => keepIds.has(n.id));
+            filteredEdges = res.edges.filter(e => keepIds.has(e.from) && keepIds.has(e.to));
+            filteredInsights = [
+              "🔴 LIVE NETWORK: Terdeteksi perangkat bersama (Device Sharing Hub) aktif di database.",
+              ...res.insights.filter(ins => ins.includes("Device") || ins.includes("Sharing"))
+            ];
+          } else {
+            useFallback = true;
+          }
+        } else if (scenario.id === "slot-cashout") {
+          const gamblingMerchants = res.nodes.filter(n => n.type === "merchant" && (n.details?.["Kategori"] === "Gambling" || n.details?.["Kategori"] === "Virtual Asset / Crypto" || n.risk === "critical"));
+          if (gamblingMerchants.length > 0) {
+            const merchIds = new Set(gamblingMerchants.map(m => m.id));
+            const neighborIds = new Set<string>();
+            res.edges.forEach(e => {
+              if (merchIds.has(e.from)) neighborIds.add(e.to);
+              if (merchIds.has(e.to)) neighborIds.add(e.from);
+            });
+            const keepIds = new Set([...merchIds, ...neighborIds]);
+            filteredNodes = res.nodes.filter(n => keepIds.has(n.id));
+            filteredEdges = res.edges.filter(e => keepIds.has(e.from) && keepIds.has(e.to));
+            filteredInsights = [
+              "🔴 LIVE NETWORK: Terdeteksi pencucian uang judi online / cashout merchant kripto.",
+              ...res.insights.filter(ins => ins.includes("Judi") || ins.includes("Slot") || ins.includes("Merchant"))
+            ];
+          } else {
+            useFallback = true;
+          }
+        } else if (scenario.id === "live-fds") {
+          // Show full network
+          if (res.nodes.length === 0) {
+            filteredInsights = ["Tidak ditemukan data transaksi berisiko aktif di database untuk divisualisasikan."];
+          }
         }
-      } else {
-        // Standard static scenario
+
+        if (useFallback) {
+          // Standard static scenario
+          setDynamicNodes(scenario.nodes);
+          setDynamicEdges(scenario.edges);
+          setDynamicInsights([
+            "ℹ️ Menampilkan simulasi studi kasus (Belum terdeteksi di database live).",
+            ...scenario.insights
+          ]);
+          if (scenario.nodes.length > 0) {
+            setSelected(scenario.nodes[0]);
+          }
+
+          // Build and inject transactions for this scenario in local store (for demo audit lifecycle)
+          const scenarioTxs: Transaction[] = [];
+          const baseDate = new Date();
+          
+          scenario.edges.forEach((edge, idx) => {
+            const fromNode = scenario.nodes.find(n => n.id === edge.from);
+            const toNode = scenario.nodes.find(n => n.id === edge.to);
+            if (!fromNode || !toNode) return;
+            
+            let amount = 1000000;
+            if (edge.label?.includes("Rp")) {
+              const val = edge.label.replace(/[^0-9.]/g, "");
+              if (val) amount = parseFloat(val) * 1000000;
+            }
+            
+            const raw = createSpecificTransaction({
+              id: `TX-GRAPH-${scenario.id}-${idx}`,
+              timestamp: new Date(baseDate.getTime() - (idx * 60000)),
+              senderName: fromNode.type === "account" ? fromNode.details?.["Nama Pemilik"] || fromNode.label : "System Device",
+              senderAccount: fromNode.details?.["No. Rekening"] || "DEV-000",
+              receiverName: toNode.type === "account" ? toNode.details?.["Nama Pemilik"] || toNode.label : toNode.label,
+              receiverAccount: toNode.details?.["No. Rekening"] || "MCH-000",
+              amount,
+              rail: "Transfer" as PaymentRail,
+              merchantCategory: toNode.type === "merchant" ? toNode.details?.["Kategori"] || "Retail" : "Transfer",
+            });
+            
+            const scoring = scoreTransaction(raw);
+            if (scenario.severity === "critical" || scenario.severity === "high") {
+              scoring.severity = scenario.severity;
+              scoring.score = scoring.severity === "critical" ? 95 : 85;
+            }
+            
+            scenarioTxs.push({
+              raw,
+              scoring,
+              aiReasoning: generateTemplateReasoning(raw, scoring),
+              isReasoningLoading: false,
+              auditStatus: "pending_review",
+              auditNotes: `Auto-generated from Graph Scenario: ${scenario.name}`,
+              auditedBy: null,
+              auditedAt: null,
+              auditHistory: [],
+              createdAt: new Date(),
+            });
+          });
+          
+          injectTransactions(scenarioTxs);
+        } else {
+          setDynamicNodes(filteredNodes);
+          setDynamicEdges(filteredEdges);
+          setDynamicInsights(filteredInsights);
+          if (filteredNodes.length > 0) {
+            setSelected(filteredNodes[0]);
+          }
+        }
+      } catch (err) {
+        console.error("[NetworkGraph] Dynamic graph analysis failed:", err);
+        // Fallback to static
         setDynamicNodes(scenario.nodes);
         setDynamicEdges(scenario.edges);
         setDynamicInsights(scenario.insights);
         setSelected(scenario.nodes[0] || null);
-
-        // Build and inject transactions for this scenario in local store (for demo audit lifecycle)
-        const scenarioTxs: Transaction[] = [];
-        const baseDate = new Date();
-        
-        scenario.edges.forEach((edge, idx) => {
-          const fromNode = scenario.nodes.find(n => n.id === edge.from);
-          const toNode = scenario.nodes.find(n => n.id === edge.to);
-          if (!fromNode || !toNode) return;
-          
-          let amount = 1000000;
-          if (edge.label?.includes("Rp")) {
-            const val = edge.label.replace(/[^0-9.]/g, "");
-            if (val) amount = parseFloat(val) * 1000000;
-          }
-          
-          const raw = createSpecificTransaction({
-            id: `TX-GRAPH-${scenario.id}-${idx}`,
-            timestamp: new Date(baseDate.getTime() - (idx * 60000)),
-            senderName: fromNode.type === "account" ? fromNode.details?.["Nama Pemilik"] || fromNode.label : "System Device",
-            senderAccount: fromNode.details?.["No. Rekening"] || "DEV-000",
-            receiverName: toNode.type === "account" ? toNode.details?.["Nama Pemilik"] || toNode.label : toNode.label,
-            receiverAccount: toNode.details?.["No. Rekening"] || "MCH-000",
-            amount,
-            rail: "Transfer" as PaymentRail,
-            merchantCategory: toNode.type === "merchant" ? toNode.details?.["Kategori"] || "Retail" : "Transfer",
-          });
-          
-          const scoring = scoreTransaction(raw);
-          if (scenario.severity === "critical" || scenario.severity === "high") {
-            scoring.severity = scenario.severity;
-            scoring.score = scoring.severity === "critical" ? 95 : 85;
-          }
-          
-          scenarioTxs.push({
-            raw,
-            scoring,
-            aiReasoning: generateTemplateReasoning(raw, scoring),
-            isReasoningLoading: false,
-            auditStatus: "pending_review",
-            auditNotes: `Auto-generated from Graph Scenario: ${scenario.name}`,
-            auditedBy: null,
-            auditedAt: null,
-            auditHistory: [],
-            createdAt: new Date(),
-          });
-        });
-        
-        injectTransactions(scenarioTxs);
+      } finally {
+        setLoading(false);
       }
+
       setZoom(1);
       setPan({ x: 0, y: 0 });
     };
