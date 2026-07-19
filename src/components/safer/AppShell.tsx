@@ -21,7 +21,7 @@ import { Tour } from "./Tour";
 import { SettingsModal } from "./SettingsModal";
 import { useTransactionActions } from "@/lib/transaction-store";
 import { useTranslation } from "@/lib/i18n";
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
 const NAV = [
   { to: "/dashboard", labelKey: "nav.monitoring", icon: LayoutDashboard, groupKey: "nav.operations" },
@@ -51,13 +51,16 @@ export function AppShell({
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   
-  // Read B2B mode state
-  const isB2b = typeof window !== "undefined" ? (localStorage.getItem("safer_b2b_enabled") === "true") : false;
-  
-  // Read role from localStorage
-  const savedRole = typeof window !== "undefined" 
-    ? (isB2b ? (localStorage.getItem("safer_role") || "admin") : "admin") 
-    : "admin";
+  const [isB2b, setIsB2b] = useState(false);
+  const [savedRole, setSavedRole] = useState("admin");
+
+  useEffect(() => {
+    const enabled = localStorage.getItem("safer_b2b_enabled") === "true";
+    setIsB2b(enabled);
+    if (enabled) {
+      setSavedRole(localStorage.getItem("safer_role") || "admin");
+    }
+  }, []);
   
   // Filter navigation items based on active simulation role
   const filteredNav = NAV.filter((item) => {
@@ -140,24 +143,17 @@ export function AppShell({
     </>
   );
 
-  if (hideLayout) {
-    return (
-      <div className="w-full min-h-screen bg-background overflow-hidden relative">
-        {children}
-        <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-screen w-full bg-surface">
+    <div className="flex min-h-screen w-full bg-background overflow-hidden relative">
       {/* Desktop Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
-        <SidebarContent />
-      </aside>
+      {!hideLayout && (
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
+          <SidebarContent />
+        </aside>
+      )}
 
       {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
+      {!hideLayout && isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
           <div
             className="fixed inset-0 bg-background/80 backdrop-blur-sm"
@@ -171,59 +167,61 @@ export function AppShell({
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 md:px-6 backdrop-blur">
-          <div className="min-w-0 flex items-center gap-3">
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden text-muted-foreground hover:text-foreground"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Link to="/" className="inline-flex items-center gap-1 hover:text-foreground">
-                  <ArrowLeft className="h-3 w-3" />
-                  Home
+        {!hideLayout && (
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 md:px-6 backdrop-blur">
+            <div className="min-w-0 flex items-center gap-3">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden text-muted-foreground hover:text-foreground"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Link to="/" className="inline-flex items-center gap-1 hover:text-foreground">
+                    <ArrowLeft className="h-3 w-3" />
+                    Home
+                  </Link>
+                  <span>/</span>
+                  <span className="truncate">{title}</span>
+                </div>
+                <h1 className="truncate text-lg font-semibold tracking-tight">{title}</h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {subtitle && <span className="hidden text-xs text-muted-foreground md:inline">{subtitle}</span>}
+              {pendingCount > 0 && (
+                <Link to="/audit" className="hidden md:inline-flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/10 px-2.5 py-1 text-[11px] text-warning hover:bg-warning/20 transition-colors">
+                  <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" />
+                  {pendingCount} pending
                 </Link>
-                <span>/</span>
-                <span className="truncate">{title}</span>
-              </div>
-              <h1 className="truncate text-lg font-semibold tracking-tight">{title}</h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {subtitle && <span className="hidden text-xs text-muted-foreground md:inline">{subtitle}</span>}
-            {pendingCount > 0 && (
-              <Link to="/audit" className="hidden md:inline-flex items-center gap-1.5 rounded-md border border-warning/30 bg-warning/10 px-2.5 py-1 text-[11px] text-warning hover:bg-warning/20 transition-colors">
-                <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" />
-                {pendingCount} pending
-              </Link>
-            )}
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="grid h-9 w-9 place-items-center rounded-md border border-border hover:bg-accent transition-colors"
-              title="Settings"
-            >
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </button>
-            <Tour />
-            <LanguageToggle />
-            <ThemeToggle />
-            <div className="hidden h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-xs md:flex">
-              <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary">
-                AN
-              </div>
-              <div className="leading-tight">
-                <div className="font-medium">{t('appShell.analystDemo')}</div>
-                <div className="text-[10px] text-muted-foreground">Fraud Ops</div>
+              )}
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="grid h-9 w-9 place-items-center rounded-md border border-border hover:bg-accent transition-colors"
+                title="Settings"
+              >
+                <Settings className="h-4 w-4 text-muted-foreground" />
+              </button>
+              <Tour />
+              <LanguageToggle />
+              <ThemeToggle />
+              <div className="hidden h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-xs md:flex">
+                <div className="grid h-6 w-6 place-items-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary">
+                  AN
+                </div>
+                <div className="leading-tight">
+                  <div className="font-medium">{t('appShell.analystDemo')}</div>
+                  <div className="text-[10px] text-muted-foreground">Fraud Ops</div>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
-        <main className="flex-1 px-4 md:px-6 py-6">{children}</main>
+          </header>
+        )}
+        <main className={`flex-1 overflow-hidden ${hideLayout ? "p-0" : "px-4 md:px-6 py-6"}`}>{children}</main>
       </div>
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      {isB2b && <RoleSwitcher />}
+      {!hideLayout && isB2b && <RoleSwitcher />}
     </div>
   );
 }
