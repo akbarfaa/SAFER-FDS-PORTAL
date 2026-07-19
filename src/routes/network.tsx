@@ -6,6 +6,8 @@ import {
   ZoomIn, 
   ZoomOut, 
   Maximize, 
+  Minimize,
+  RotateCcw,
   Check, 
   ExternalLink,
   Info,
@@ -205,6 +207,7 @@ function NetworkPage() {
   const [hovered, setHovered] = useState<Node | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const [toast, setToast] = useState<{ message: string; type: "success" | "warning" } | null>(null);
   
@@ -512,7 +515,11 @@ function NetworkPage() {
       <div className="grid gap-4 lg:grid-cols-4">
         
         {/* Graph Render Area */}
-        <div className="lg:col-span-3 rounded-lg border border-border bg-card overflow-hidden flex flex-col relative">
+        <div className={`rounded-lg border border-border bg-card overflow-hidden flex flex-col relative transition-all duration-300 ${
+          isFullscreen 
+            ? "fixed inset-0 z-50 w-screen h-screen p-4 bg-background" 
+            : "lg:col-span-3"
+        }`}>
           
           {/* Visual Header */}
           <div className="flex flex-wrap items-center justify-between border-b border-border px-5 py-3 bg-card relative z-10 gap-2">
@@ -532,13 +539,28 @@ function NetworkPage() {
             
             {/* Graph Toolbar */}
             <div className="flex items-center gap-1.5 text-xs">
+              <span className="hidden md:inline text-[10px] text-muted-foreground mr-2 font-medium bg-muted/60 px-2 py-1 rounded">
+                💡 Zoom: Scroll / Pinch | Pan: Drag Canvas
+              </span>
+              
+              <button
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className={`grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors ${
+                  isFullscreen ? "text-primary border-primary bg-primary/10" : ""
+                }`}
+                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Workspace"}
+              >
+                {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
+              </button>
+              
               <button
                 onClick={resetView}
                 className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors"
-                title="Reset view"
+                title="Reset Zoom & Pan"
               >
-                <Maximize className="h-3.5 w-3.5" />
+                <RotateCcw className="h-3.5 w-3.5" />
               </button>
+              
               <button
                 onClick={() => setZoom((z) => Math.max(0.4, z - 0.15))}
                 className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors"
@@ -546,6 +568,7 @@ function NetworkPage() {
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </button>
+              
               <button
                 onClick={() => setZoom((z) => Math.min(2.2, z + 0.15))}
                 className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors"
@@ -553,6 +576,7 @@ function NetworkPage() {
               >
                 <ZoomIn className="h-3.5 w-3.5" />
               </button>
+              
               <div className="h-4 w-px bg-border mx-1" />
               <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
                 Zoom: {Math.round(zoom * 100)}%
@@ -573,7 +597,7 @@ function NetworkPage() {
           <div 
             ref={containerRef}
             className="relative bg-surface touch-none select-none cursor-grab active:cursor-grabbing flex-1" 
-            style={{ height: 500 }}
+            style={{ height: isFullscreen ? "calc(100vh - 100px)" : 500 }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
