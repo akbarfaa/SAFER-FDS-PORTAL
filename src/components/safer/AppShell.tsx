@@ -37,7 +37,17 @@ const NAV = [
 
 import { RoleSwitcher } from "./RoleSwitcher";
 
-export function AppShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
+export function AppShell({ 
+  children, 
+  title, 
+  subtitle,
+  hideLayout = false 
+}: { 
+  children: ReactNode; 
+  title: string; 
+  subtitle?: string;
+  hideLayout?: boolean;
+}) {
   const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   
@@ -129,6 +139,15 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
       </div>
     </>
   );
+
+  if (hideLayout) {
+    return (
+      <div className="w-full min-h-screen bg-background overflow-hidden relative">
+        {children}
+        <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-surface">

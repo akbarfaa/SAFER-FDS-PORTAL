@@ -488,7 +488,7 @@ function NetworkPage() {
   };
 
   return (
-    <AppShell title={t('network.title')} subtitle={t('network.subtitle')}>
+    <AppShell title={t('network.title')} subtitle={t('network.subtitle')} hideLayout={isFullscreen}>
       
       <AnimatePresence>
         {toast && (
@@ -512,12 +512,16 @@ function NetworkPage() {
         )}
       </AnimatePresence>
 
-      <div className="grid gap-4 lg:grid-cols-4">
+      <div className={`grid gap-4 transition-all duration-300 ${
+        isFullscreen 
+          ? "fixed inset-0 z-50 w-screen h-screen p-6 bg-background flex flex-row overflow-hidden gap-4" 
+          : "lg:grid-cols-4"
+      }`}>
         
         {/* Graph Render Area */}
         <div className={`rounded-lg border border-border bg-card overflow-hidden flex flex-col relative transition-all duration-300 ${
           isFullscreen 
-            ? "fixed inset-0 z-50 w-screen h-screen p-4 bg-background" 
+            ? "flex-1 h-full" 
             : "lg:col-span-3"
         }`}>
           
@@ -795,7 +799,11 @@ function NetworkPage() {
         </div>
 
         {/* Sidebar Controls & Insights */}
-        <div className="space-y-4">
+        <div className={`space-y-4 ${
+          isFullscreen 
+            ? "w-[340px] shrink-0 h-full overflow-y-auto bg-card border border-border rounded-lg p-5 custom-scrollbar" 
+            : ""
+        }`}>
           
           {/* Scenario Selector Card */}
           <div className="rounded-lg border border-border bg-card overflow-hidden">

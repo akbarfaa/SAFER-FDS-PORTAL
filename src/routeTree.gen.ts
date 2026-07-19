@@ -16,6 +16,7 @@ import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ComplianceRouteImport } from './routes/compliance'
 import { Route as BusinessRouteImport } from './routes/business'
+import { Route as B2bDemoRouteImport } from './routes/b2b-demo'
 import { Route as AuditRouteImport } from './routes/audit'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
@@ -55,6 +56,11 @@ const BusinessRoute = BusinessRouteImport.update({
   path: '/business',
   getParentRoute: () => rootRouteImport,
 } as any)
+const B2bDemoRoute = B2bDemoRouteImport.update({
+  id: '/b2b-demo',
+  path: '/b2b-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuditRoute = AuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/audit': typeof AuditRoute
+  '/b2b-demo': typeof B2bDemoRoute
   '/business': typeof BusinessRoute
   '/compliance': typeof ComplianceRoute
   '/dashboard': typeof DashboardRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/audit': typeof AuditRoute
+  '/b2b-demo': typeof B2bDemoRoute
   '/business': typeof BusinessRoute
   '/compliance': typeof ComplianceRoute
   '/dashboard': typeof DashboardRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/audit': typeof AuditRoute
+  '/b2b-demo': typeof B2bDemoRoute
   '/business': typeof BusinessRoute
   '/compliance': typeof ComplianceRoute
   '/dashboard': typeof DashboardRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/architecture'
     | '/audit'
+    | '/b2b-demo'
     | '/business'
     | '/compliance'
     | '/dashboard'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/architecture'
     | '/audit'
+    | '/b2b-demo'
     | '/business'
     | '/compliance'
     | '/dashboard'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/architecture'
     | '/audit'
+    | '/b2b-demo'
     | '/business'
     | '/compliance'
     | '/dashboard'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchitectureRoute: typeof ArchitectureRoute
   AuditRoute: typeof AuditRoute
+  B2bDemoRoute: typeof B2bDemoRoute
   BusinessRoute: typeof BusinessRoute
   ComplianceRoute: typeof ComplianceRoute
   DashboardRoute: typeof DashboardRoute
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BusinessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/b2b-demo': {
+      id: '/b2b-demo'
+      path: '/b2b-demo'
+      fullPath: '/b2b-demo'
+      preLoaderRoute: typeof B2bDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/audit': {
       id: '/audit'
       path: '/audit'
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchitectureRoute: ArchitectureRoute,
   AuditRoute: AuditRoute,
+  B2bDemoRoute: B2bDemoRoute,
   BusinessRoute: BusinessRoute,
   ComplianceRoute: ComplianceRoute,
   DashboardRoute: DashboardRoute,
