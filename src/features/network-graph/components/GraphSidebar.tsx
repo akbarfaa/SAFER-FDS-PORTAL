@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Globe,
   Coins,
+  X,
 } from "lucide-react";
 import type { GraphScenario, GraphNode, GraphEdge } from "../types";
 import { RISK_BG, NODE_STYLE } from "../types";
@@ -54,12 +55,60 @@ export function GraphSidebar({
   onInvestigate,
   onShowToast,
 }: GraphSidebarProps) {
-  const activeScenario = scenarios[activeScenarioIdx] || scenarios[0];
-
   return (
     <div className="w-full lg:w-80 space-y-4 shrink-0">
-      {/* Active Node Detail Inspector Card */}
-      {selected ? (
+      {/* 1. Scenario Selector Card (ALWAYS VISIBLE) */}
+      <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+          <Network className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-bold text-foreground">Investigasi Skenario Fraud</h3>
+        </div>
+
+        <div className="space-y-2.5">
+          {scenarios.map((sc, idx) => {
+            const isActive = idx === activeScenarioIdx;
+            return (
+              <button
+                key={sc.id}
+                onClick={() => onSelectScenario(idx)}
+                className={`w-full text-left p-3.5 rounded-lg border transition-all duration-200 ${
+                  isActive
+                    ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/30"
+                    : "border-border bg-surface hover:bg-accent"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground">{sc.name}</span>
+                  <span className={`rounded border px-1.5 py-0.5 text-[9px] uppercase font-bold ${RISK_BG[sc.severity]}`}>
+                    {sc.severity}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                  {sc.description}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 pt-3 border-t border-border">
+          <button
+            onClick={onInvestigate}
+            disabled={isInvestigated}
+            className={`w-full inline-flex h-9 items-center justify-center gap-2 rounded-md text-xs font-semibold transition-all ${
+              isInvestigated
+                ? "bg-accent text-muted-foreground border border-border cursor-not-allowed"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
+            }`}
+          >
+            <ShieldAlert className="h-3.5 w-3.5" />
+            {isInvestigated ? "Klaster Sudah Dimasukkan Audit" : "Eskalasi Klaster ke Tim Audit"}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Active Selected Node Inspector Card (Shows when a node is clicked) */}
+      {selected && (
         <div className="rounded-lg border border-primary/40 bg-card p-5 shadow-lg animate-in fade-in slide-in-from-right-4 duration-300">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <div className="flex items-center gap-2">
@@ -108,59 +157,9 @@ export function GraphSidebar({
             </button>
           </div>
         </div>
-      ) : (
-        /* Scenario Selector Card */
-        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
-            <Network className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">Investigasi Skenario Fraud</h3>
-          </div>
-
-          <div className="space-y-2.5">
-            {scenarios.map((sc, idx) => {
-              const isActive = idx === activeScenarioIdx;
-              return (
-                <button
-                  key={sc.id}
-                  onClick={() => onSelectScenario(idx)}
-                  className={`w-full text-left p-3.5 rounded-lg border transition-all duration-200 ${
-                    isActive
-                      ? "border-primary bg-primary/10 shadow-sm"
-                      : "border-border bg-surface hover:bg-accent"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-foreground">{sc.name}</span>
-                    <span className={`rounded border px-1.5 py-0.5 text-[9px] uppercase font-bold ${RISK_BG[sc.severity]}`}>
-                      {sc.severity}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                    {sc.description}
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-border">
-            <button
-              onClick={onInvestigate}
-              disabled={isInvestigated}
-              className={`w-full inline-flex h-9 items-center justify-center gap-2 rounded-md text-xs font-semibold transition-all ${
-                isInvestigated
-                  ? "bg-accent text-muted-foreground border border-border cursor-not-allowed"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
-              }`}
-            >
-              <ShieldAlert className="h-3.5 w-3.5" />
-              {isInvestigated ? "Klaster Sudah Dimasukkan Audit" : "Eskalasi Klaster ke Tim Audit"}
-            </button>
-          </div>
-        </div>
       )}
 
-      {/* Cluster Intelligence Insights Card */}
+      {/* 3. Cluster Intelligence Insights Card */}
       {dynamicInsights && dynamicInsights.length > 0 && (
         <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
