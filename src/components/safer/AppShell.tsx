@@ -78,6 +78,7 @@ export function AppShell({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   let pendingCount = 0;
+
   try {
     const actions = useTransactionActions();
     pendingCount = actions.stats.pendingReview;
@@ -85,7 +86,7 @@ export function AppShell({
 
   const SidebarContent = () => (
     <>
-      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
+      <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5 shrink-0">
         <Logo />
         {isMobileMenuOpen && (
           <button
@@ -126,7 +127,7 @@ export function AppShell({
           </div>
         ))}
       </nav>
-      <div className="border-t border-sidebar-border p-4 space-y-3">
+      <div className="border-t border-sidebar-border p-4 space-y-3 shrink-0">
         <div className="rounded-md border border-border bg-card p-3">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
@@ -144,10 +145,10 @@ export function AppShell({
   );
 
   return (
-    <div className="flex min-h-screen w-full bg-background overflow-hidden relative">
-      {/* Desktop Sidebar */}
+    <div className="flex h-screen w-screen bg-background overflow-hidden relative">
+      {/* Desktop Sidebar — Fixed & Independent Scroll */}
       {!hideLayout && (
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col">
+        <aside className="h-screen w-64 shrink-0 border-r border-sidebar-border bg-sidebar hidden lg:flex lg:flex-col z-20">
           <SidebarContent />
         </aside>
       )}
@@ -159,16 +160,16 @@ export function AppShell({
             className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <aside className="relative flex w-64 flex-col bg-sidebar border-r border-sidebar-border shadow-2xl">
+          <aside className="relative flex w-64 flex-col bg-sidebar border-r border-sidebar-border shadow-2xl h-full">
             <SidebarContent />
           </aside>
         </div>
       )}
 
-      {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Main Content Area */}
+      <div className="flex min-w-0 flex-1 flex-col h-screen overflow-hidden">
         {!hideLayout && (
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 md:px-6 backdrop-blur">
+          <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/80 px-4 md:px-6 backdrop-blur">
             <div className="min-w-0 flex items-center gap-3">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -218,7 +219,7 @@ export function AppShell({
             </div>
           </header>
         )}
-        <main className={`flex-1 overflow-hidden ${hideLayout ? "p-0" : "px-4 md:px-6 py-6"}`}>{children}</main>
+        <main className={`flex-1 overflow-y-auto ${hideLayout ? "p-0" : "px-4 md:px-6 py-6"}`}>{children}</main>
       </div>
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       {!hideLayout && isB2b && <RoleSwitcher />}
