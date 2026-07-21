@@ -1,69 +1,104 @@
 /**
- * Network Graph — Toolbar Component
- * Controls for zoom, reset, and fullscreen toggle.
+ * Network Graph — Interactive Toolbar Component
  */
-import { Network as NetworkIcon, ZoomIn, ZoomOut, Maximize, Minimize, RotateCcw } from "lucide-react";
-import { useTranslation } from "@/lib/i18n";
+import { ZoomIn, ZoomOut, RotateCcw, Maximize, Minimize, RefreshCw } from "lucide-react";
+import { RISK_BG } from "../types";
 
 interface GraphToolbarProps {
-  scenarioName: string;
-  scenarioSeverity: string;
-  isInvestigated: boolean;
-  isFullscreen: boolean;
+  scenarioName?: string;
+  scenarioSeverity?: "low" | "medium" | "high" | "critical";
+  isInvestigated?: boolean;
   zoom: number;
-  onToggleFullscreen: () => void;
-  onResetView: () => void;
+  isFullscreen: boolean;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  onResetView: () => void;
+  onToggleFullscreen: () => void;
+  onRefreshLayout?: () => void;
 }
 
 export function GraphToolbar({
-  scenarioName, scenarioSeverity, isInvestigated, isFullscreen, zoom,
-  onToggleFullscreen, onResetView, onZoomIn, onZoomOut,
+  scenarioName,
+  scenarioSeverity,
+  isInvestigated,
+  zoom,
+  isFullscreen,
+  onZoomIn,
+  onZoomOut,
+  onResetView,
+  onToggleFullscreen,
+  onRefreshLayout,
 }: GraphToolbarProps) {
-  const { t } = useTranslation();
-
   return (
-    <div className="flex flex-wrap items-center justify-between border-b border-border px-5 py-3 bg-card relative z-10 gap-2">
-      <div className="flex items-center gap-2 text-sm font-semibold">
-        <NetworkIcon className="h-4 w-4 text-primary" />
-        <span>{scenarioName}</span>
-        <span className={`ml-2 rounded px-2 py-0.5 text-[10px] font-semibold uppercase ${
-          isInvestigated
-            ? "bg-warning/20 text-warning border border-warning/30"
-            : scenarioSeverity === "critical"
-              ? "bg-critical/10 text-critical"
-              : "bg-destructive/10 text-destructive"
-        }`}>
-          {isInvestigated ? t('network.status.investigating') : scenarioSeverity}
-        </span>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/90 px-5 py-3 backdrop-blur-md">
+      <div className="flex items-center gap-3">
+        {scenarioName && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-100">{scenarioName}</span>
+            {scenarioSeverity && (
+              <span className={`rounded border px-1.5 py-0.5 text-[9px] uppercase font-bold ${RISK_BG[scenarioSeverity]}`}>
+                {scenarioSeverity}
+              </span>
+            )}
+          </div>
+        )}
+        {isInvestigated && (
+          <span className="rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 text-[10px] font-semibold">
+            In Audit Queue
+          </span>
+        )}
       </div>
 
-      <div className="flex items-center gap-1.5 text-xs">
-        <span className="hidden md:inline text-[10px] text-muted-foreground mr-2 font-medium bg-muted/60 px-2 py-1 rounded">
-          💡 Zoom: Scroll / Pinch | Pan: Drag Canvas
-        </span>
-
-        <button onClick={onToggleFullscreen} className={`grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors ${isFullscreen ? "text-primary border-primary bg-primary/10" : ""}`} title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Workspace"}>
-          {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
-        </button>
-
-        <button onClick={onResetView} className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors" title="Reset Zoom & Pan">
-          <RotateCcw className="h-3.5 w-3.5" />
-        </button>
-
-        <button onClick={onZoomOut} className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors" title="Zoom Out">
-          <ZoomOut className="h-3.5 w-3.5" />
-        </button>
-
-        <button onClick={onZoomIn} className="grid h-8 w-8 place-items-center rounded-md border border-border bg-surface hover:bg-accent transition-colors" title="Zoom In">
+      <div className="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/80 p-1 shadow-lg">
+        <button
+          onClick={onZoomIn}
+          className="grid h-7 w-7 place-items-center rounded text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+          title="Zoom In"
+        >
           <ZoomIn className="h-3.5 w-3.5" />
         </button>
 
-        <div className="h-4 w-px bg-border mx-1" />
-        <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
-          Zoom: {Math.round(zoom * 100)}%
+        <span className="num px-1 text-[11px] text-slate-400 font-mono select-none">
+          {Math.round(zoom * 100)}%
         </span>
+
+        <button
+          onClick={onZoomOut}
+          className="grid h-7 w-7 place-items-center rounded text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-3.5 w-3.5" />
+        </button>
+
+        <div className="h-3.5 w-px bg-slate-800 mx-1" />
+
+        <button
+          onClick={onResetView}
+          className="grid h-7 w-7 place-items-center rounded text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+          title="Reset Viewpoint"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+        </button>
+
+        {onRefreshLayout && (
+          <button
+            onClick={onRefreshLayout}
+            className="grid h-7 w-7 place-items-center rounded text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+            title="Re-run Spring Embedding Layout"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+        )}
+
+        <div className="h-3.5 w-px bg-slate-800 mx-1" />
+
+        <button
+          onClick={onToggleFullscreen}
+          className="grid h-7 w-7 place-items-center rounded text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Workspace"}
+        >
+          {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
+        </button>
       </div>
     </div>
   );
