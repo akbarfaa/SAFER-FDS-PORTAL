@@ -12,7 +12,7 @@ import {
   type Transaction,
 } from "@/lib/transaction-store";
 import { TransactionDetail } from "@/components/safer/TransactionDetail";
-import type { PaymentRail } from "@/lib/transaction-engine";
+import type { PaymentRail } from "@/lib/engines/transaction";
 import type { Severity } from "@/lib/safer-data";
 import { useTranslation } from "@/lib/i18n";
 import {

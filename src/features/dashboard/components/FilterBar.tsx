@@ -3,7 +3,7 @@
  */
 import { Play, Pause, Zap, Target, Filter } from "lucide-react";
 import { AUDIT_STATUS_META, type AuditStatus } from "@/lib/transaction-store";
-import type { PaymentRail } from "@/lib/transaction-engine";
+import type { PaymentRail } from "@/lib/engines/transaction";
 import type { Severity } from "@/lib/safer-data";
 
 interface FilterBarProps {

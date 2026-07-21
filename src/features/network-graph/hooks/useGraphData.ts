@@ -4,9 +4,9 @@
  */
 import { useState, useEffect } from "react";
 import { useTransactionActions, useTransactions, type Transaction } from "@/lib/transaction-store";
-import { createSpecificTransaction, type PaymentRail } from "@/lib/transaction-engine";
-import { scoreTransaction } from "@/lib/risk-scoring";
-import { generateTemplateReasoning } from "@/lib/ai-reasoning";
+import { createSpecificTransaction, type PaymentRail } from "@/lib/engines/transaction";
+import { scoreTransaction } from "@/lib/scoring";
+import { generateTemplateReasoning } from "@/lib/engines/ai-reasoning";
 import { api } from "@/lib/api/api-client";
 import type { GraphNode, GraphEdge, GraphScenario } from "../types";
 import { STATIC_SCENARIOS } from "../constants";

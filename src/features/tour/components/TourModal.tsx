@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, X, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { tourStore, useTourStore } from "@/lib/tour-store";
+import { tourStore, useTourStore } from "@/lib/stores/tour-store";
 import { TOUR_STEPS, getBotStateTheme } from "../constants";
 import { SaferBotAvatar } from "./SaferBotAvatar";
 

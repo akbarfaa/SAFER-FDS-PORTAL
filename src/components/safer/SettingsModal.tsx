@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { X, Zap, Brain, Settings, RotateCcw, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { useTransactionActions } from "@/lib/transaction-store";
-import { testLLMConnection, type LLMConfig } from "@/lib/ai-reasoning";
+import { testLLMConnection, type LLMConfig } from "@/lib/engines/ai-reasoning";
 
 interface Props {
   open: boolean;
