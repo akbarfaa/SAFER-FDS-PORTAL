@@ -1,10 +1,7 @@
 /**
  * SAFER — Transaction Store
- *
- * Centralised state management for all transactions, synced with the
- * FastAPI database and ML scoring backend.
+ * Centralised state management for all transactions, synced with FastAPI & ML scoring backend.
  */
-
 import {
   createContext,
   useContext,
@@ -16,221 +13,20 @@ import {
 import {
   generateTransactionBatch,
   resetTransactionCounter,
-  type RawTransaction,
 } from "./transaction-engine";
-import { scoreTransaction, type ScoringResult, type Indicator } from "./risk-scoring";
-import { generateTemplateReasoning, generateLLMReasoning, type LLMConfig } from "./ai-reasoning";
-import type { Severity } from "./safer-data";
-import { api, type TransactionResponse } from "./api/api-client";
+import { scoreTransaction } from "./risk-scoring";
+import { generateTemplateReasoning, type LLMConfig } from "./ai-reasoning";
+import { api } from "./api/api-client";
+import {
+  type AuditStatus,
+  type Transaction,
+  type AuditHistoryEntry,
+} from "./stores/transaction-types";
+import { mapBackendTx } from "./stores/transaction-mapper";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-export type AuditStatus =
-  | "pending_review"
-  | "under_investigation"
-  | "planned_audit"
-  | "audited_legitimate"
-  | "audited_suspicious"
-  | "escalated"
-  | "blocked"
-  | "cleared";
-
-export const AUDIT_STATUS_META: Record<
-  AuditStatus,
-  { label: string; color: string; bg: string }
-> = {
-  pending_review: {
-    label: "Pending Review",
-    color: "text-muted-foreground",
-    bg: "bg-muted/50",
-  },
-  under_investigation: {
-    label: "Under Investigation",
-    color: "text-warning",
-    bg: "bg-warning/10",
-  },
-  planned_audit: {
-    label: "Planned Audit",
-    color: "text-chart-2",
-    bg: "bg-chart-2/10",
-  },
-  audited_legitimate: {
-    label: "Audited — Legitimate",
-    color: "text-success",
-    bg: "bg-success/10",
-  },
-  audited_suspicious: {
-    label: "Audited — Suspicious",
-    color: "text-destructive",
-    bg: "bg-destructive/10",
-  },
-  escalated: {
-    label: "Escalated",
-    color: "text-critical",
-    bg: "bg-critical/10",
-  },
-  blocked: {
-    label: "Blocked",
-    color: "text-destructive",
-    bg: "bg-destructive/15",
-  },
-  cleared: {
-    label: "Cleared",
-    color: "text-success",
-    bg: "bg-success/15",
-  },
-};
-
-export interface Transaction {
-  // Raw data
-  raw: RawTransaction;
-  // Scoring
-  scoring: ScoringResult;
-  // AI reasoning
-  aiReasoning: string;
-  isReasoningLoading: boolean;
-  // Audit
-  auditStatus: AuditStatus;
-  auditNotes: string;
-  auditedBy: string | null;
-  auditedAt: Date | null;
-  auditHistory: AuditHistoryEntry[];
-  // Metadata
-  createdAt: Date;
-}
-
-export interface AuditHistoryEntry {
-  from: AuditStatus;
-  to: AuditStatus;
-  by: string;
-  at: Date;
-  notes?: string;
-}
-
-// Convenience accessors from raw data
-export function txId(t: Transaction) { return t.raw.id; }
-export function txSeverity(t: Transaction): Severity { return t.scoring.severity; }
-export function txScore(t: Transaction) { return t.scoring.score; }
-export function txAmount(t: Transaction) { return t.raw.amount; }
-export function txRail(t: Transaction) { return t.raw.rail; }
-
-// ─── Mapper Function ────────────────────────────────────────────────────────
-
-export function mapBackendTx(b: TransactionResponse): Transaction {
-  const indicators: Indicator[] = [];
-  let primaryRiskFactors: string[] = [];
-  try {
-    const factors = JSON.parse(b.primary_risk_factors || "[]");
-    primaryRiskFactors = factors.map((f: any) => f.label || String(f.feature || ""));
-    factors.forEach((f: any) => {
-      indicators.push({
-        id: f.feature,
-        label: f.label,
-        detail: f.label,
-        weight: Math.round(f.shap_value * 100),
-        maxWeight: 100,
-        hit: true,
-        category: "behavioral"
-      });
-    });
-  } catch (e) {
-    // If no risk factors JSON, populate from active binary columns
-    const keys: Array<keyof TransactionResponse> = [
-      "is_velocity_anomaly", "is_geo_mismatch", "is_off_hours",
-      "is_high_value_for_rail", "is_suspicious_ip", "is_risky_merchant",
-      "is_new_account", "has_failed_attempts", "is_device_mismatch",
-      "is_sim_swap", "is_unusual_beneficiary", "is_new_device"
-    ];
-    keys.forEach(k => {
-      if (b[k] === true) {
-        let category: Indicator["category"] = "behavioral";
-        if (k.includes("device") || k.includes("sim")) category = "device";
-        else if (k.includes("account") || k.includes("failed")) category = "account";
-        else if (k.includes("beneficiary")) category = "network";
-        else if (k.includes("value")) category = "transaction";
-
-        const label = k.replace("is_", "").replace(/_/g, " ");
-        primaryRiskFactors.push(label);
-
-        indicators.push({
-          id: k,
-          label: label,
-          detail: label,
-          weight: 10,
-          maxWeight: 10,
-          hit: true,
-          category: category
-        });
-      }
-    });
-  }
-
-  return {
-    raw: {
-      id: b.id,
-      timestamp: new Date(b.timestamp),
-      senderName: b.sender_name,
-      senderAccount: b.sender_account,
-      senderBank: b.sender_bank,
-      senderCity: b.sender_city,
-      senderProvince: b.sender_province,
-      senderLat: b.sender_lat,
-      senderLng: b.sender_lng,
-      receiverName: b.receiver_name,
-      receiverAccount: b.receiver_account,
-      receiverBank: b.receiver_bank,
-      receiverCity: b.receiver_city,
-      receiverProvince: b.receiver_province,
-      receiverLat: b.receiver_lat,
-      receiverLng: b.receiver_lng,
-      amount: b.amount,
-      rail: b.payment_rail as any,
-      ewalletProvider: b.ewallet_provider as any,
-      merchant: b.merchant,
-      merchantCategory: b.merchant_category,
-      channel: b.channel,
-      deviceType: b.device_type,
-      deviceBrand: b.device_brand,
-      deviceFingerprint: b.device_fingerprint,
-      ipAddress: b.ip_address,
-      isNewDevice: b.is_new_device,
-      accountAgeDays: b.account_age_days,
-      isVelocityAnomaly: b.is_velocity_anomaly,
-      isGeoMismatch: b.is_geo_mismatch,
-      isOffHours: b.is_off_hours,
-      isHighValueForRail: b.is_high_value_for_rail,
-      isSuspiciousIp: b.is_suspicious_ip,
-      isRiskyMerchant: b.is_risky_merchant,
-      isNewAccount: b.is_new_account,
-      hasFailedAttempts: b.has_failed_attempts,
-      isDeviceMismatch: b.is_device_mismatch,
-      isSimSwap: b.is_sim_swap,
-      isUnusualBeneficiary: b.is_unusual_beneficiary,
-      velocityCount: b.velocity_count,
-      geoDistanceKm: b.geo_distance_km,
-    },
-    scoring: {
-      score: b.risk_score,
-      severity: b.severity,
-      fraudProbability: b.fraud_probability,
-      xgbProbability: b.xgb_probability,
-      lgbProbability: b.lgb_probability,
-      indicators: indicators,
-      suggestedAction: b.suggested_action,
-      primaryRiskFactors: primaryRiskFactors,
-    },
-    aiReasoning: b.ai_reasoning,
-    isReasoningLoading: false,
-    auditStatus: b.audit_status as any,
-    auditNotes: b.audit_notes,
-    auditedBy: b.audited_by,
-    auditedAt: b.audited_at ? new Date(b.audited_at) : null,
-    auditHistory: [],
-    createdAt: b.created_at ? new Date(b.created_at) : new Date(),
-  };
-}
-
-// ─── Store (external store pattern for perf) ────────────────────────────────
+// Re-export all types and helper accessors for backward compatibility
+export * from "./stores/transaction-types";
+export { mapBackendTx } from "./stores/transaction-mapper";
 
 type Listener = () => void;
 
@@ -251,18 +47,13 @@ class TransactionStore {
 
   constructor() {
     if (typeof window !== "undefined") {
-      // Defer initialization to the next tick to prevent React hydration mismatch (Error 419)
       setTimeout(() => {
-        // Restore LLM config from localStorage
         try {
           const saved = localStorage.getItem("safer_llm_config");
           if (saved) this._llmConfig = JSON.parse(saved);
         } catch { /* ignore */ }
 
-        // Initial load from backend database
         this.loadInitialTransactions();
-
-        // Start background polling to keep client sync with backend DB
         this.startPolling();
       }, 0);
     }
@@ -285,7 +76,6 @@ class TransactionStore {
         const res = await api.getTransactions({ page: 1, page_size: 100 });
         const backendTxs = res.items.map(mapBackendTx);
         
-        // Check for new transactions or changes in status to avoid unnecessary emits
         const localIds = new Set(this._transactions.map(t => t.raw.id));
         const hasNew = backendTxs.some(t => !localIds.has(t.raw.id));
         
@@ -305,7 +95,7 @@ class TransactionStore {
       } catch (err) {
         console.warn("[TransactionStore] Background sync polling failed:", err);
       }
-    }, 4000); // Poll every 4 seconds
+    }, 4000);
   };
 
   stopPolling = () => {
@@ -315,7 +105,6 @@ class TransactionStore {
     }
   };
 
-  // ── Subscriptions ──────────────────────────────────────────────────────
   subscribe = (listener: Listener) => {
     this._listeners.add(listener);
     return () => this._listeners.delete(listener);
@@ -328,18 +117,15 @@ class TransactionStore {
     this._listeners.forEach(l => l());
   }
 
-  // ── Transaction Generation ─────────────────────────────────────────────
   generateBatch = async (count?: number, forceHighRisk = false) => {
     const n = count ?? this._batchSize;
     try {
-      // Generate through FastAPI Data + Scoring services
       const backendTxs = await api.generateBatch(n, forceHighRisk ? 1.0 : this._fraudRatio);
       const newTxs = backendTxs.map(mapBackendTx);
       this._transactions = [...newTxs, ...this._transactions];
       this._emit();
     } catch (err) {
       console.error("[TransactionStore] Batch generate failed. Falling back to local scoring:", err);
-      // Local fallback
       const rawBatch = generateTransactionBatch(n, this._fraudRatio, forceHighRisk);
       const fallbackTxs: Transaction[] = [];
       for (const raw of rawBatch) {
@@ -362,27 +148,21 @@ class TransactionStore {
     }
   };
 
-  // ── Scenario Injection ──────────────────────────────────────────────────
   injectTransactions = (txs: Transaction[]) => {
     const existingIds = new Set(this._transactions.map(t => t.raw.id));
     const newTxs = txs.filter(t => !existingIds.has(t.raw.id));
-    
     if (newTxs.length === 0) return;
-    
     this._transactions = [...newTxs, ...this._transactions];
     this._emit();
   };
 
-  // ── Audit Actions ──────────────────────────────────────────────────────
   updateAuditStatus = async (txId: string, newStatus: AuditStatus, notes?: string) => {
-    // 1. Pessimistically update the backend first
     try {
       await api.updateAuditStatus(txId, newStatus, notes || "", "Analyst Demo");
     } catch (err) {
       console.error("[TransactionStore] Failed to update audit status on backend:", err);
     }
 
-    // 2. Reflect change in local memory
     const idx = this._transactions.findIndex(t => t.raw.id === txId);
     if (idx === -1) return;
 
@@ -407,7 +187,6 @@ class TransactionStore {
   };
 
   updateAuditStatusBulk = async (txIds: string[], newStatus: AuditStatus, notes?: string) => {
-    // 1. Update backend (special gateway cluster route)
     if (newStatus === "under_investigation") {
       try {
         await api.investigateCluster(txIds, notes || "Cluster investigation", "Analyst Demo (Graph)");
@@ -415,18 +194,16 @@ class TransactionStore {
         console.error("[TransactionStore] Bulk status update failed on backend:", err);
       }
     } else {
-      // Sequence them otherwise
       for (const txId of txIds) {
         try {
           await api.updateAuditStatus(txId, newStatus, notes || "", "Analyst Demo (Graph)");
-        } catch (e) { /* ignore single errors */ }
+        } catch { /* ignore single errors */ }
       }
     }
 
-    // 2. Reflect in local memory
     let changed = false;
     const now = new Date();
-    
+
     this._transactions = this._transactions.map(tx => {
       if (txIds.includes(tx.raw.id)) {
         changed = true;
@@ -459,7 +236,6 @@ class TransactionStore {
     this._emit();
   };
 
-  // ── Auto-generation ────────────────────────────────────────────────────
   startAutoGenerate = () => {
     this.stopAutoGenerate();
     this._autoInterval = setInterval(() => {
@@ -475,11 +251,8 @@ class TransactionStore {
     }
   };
 
-  get isAutoGenerating() {
-    return this._autoInterval !== null;
-  }
+  get isAutoGenerating() { return this._autoInterval !== null; }
 
-  // ── Settings ───────────────────────────────────────────────────────────
   get llmConfig() { return this._llmConfig; }
   set llmConfig(cfg: LLMConfig) {
     this._llmConfig = cfg;
@@ -491,9 +264,7 @@ class TransactionStore {
   get autoIntervalMs() { return this._autoIntervalMs; }
   set autoIntervalMs(ms: number) {
     this._autoIntervalMs = Math.max(3000, Math.min(60000, ms));
-    if (this._autoInterval) {
-      this.startAutoGenerate();
-    }
+    if (this._autoInterval) this.startAutoGenerate();
   }
 
   get fraudRatio() { return this._fraudRatio; }
@@ -502,7 +273,6 @@ class TransactionStore {
   get batchSize() { return this._batchSize; }
   set batchSize(n: number) { this._batchSize = Math.max(1, Math.min(10, n)); }
 
-  // ── Reset ──────────────────────────────────────────────────────────────
   reset = () => {
     this.stopAutoGenerate();
     this._transactions = [];
@@ -510,7 +280,6 @@ class TransactionStore {
     this._emit();
   };
 
-  // ── Stats ──────────────────────────────────────────────────────────────
   get stats() {
     const txs = this._transactions;
     const total = txs.length;
@@ -550,10 +319,7 @@ class TransactionStore {
   }
 }
 
-// ─── Singleton & Context ────────────────────────────────────────────────────
-
 const store = new TransactionStore();
-
 const StoreContext = createContext<TransactionStore>(store);
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
