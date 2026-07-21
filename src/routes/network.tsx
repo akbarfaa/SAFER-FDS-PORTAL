@@ -63,15 +63,15 @@ function NetworkPage() {
       </AnimatePresence>
 
       {/* Main Layout */}
-      <div className={`grid gap-4 transition-all duration-300 ${
+      <div className={`transition-all duration-300 ${
         interaction.isFullscreen
-          ? "fixed inset-0 z-50 w-screen h-screen p-6 bg-background flex flex-row overflow-hidden gap-4"
-          : "lg:grid-cols-4"
+          ? "fixed inset-0 z-50 w-screen h-screen p-4 bg-background flex flex-col lg:flex-row overflow-hidden gap-4"
+          : "grid gap-4 lg:grid-cols-4"
       }`}>
 
-        {/* Graph Area (3/4 width) */}
-        <div className={`rounded-lg border border-border bg-card overflow-hidden flex flex-col relative transition-all duration-300 ${
-          interaction.isFullscreen ? "flex-1 h-full" : "lg:col-span-3"
+        {/* Graph Area (3/4 width in normal mode, flex-1 h-full in fullscreen) */}
+        <div className={`rounded-lg border border-border bg-card overflow-hidden flex flex-col relative transition-all duration-300 min-h-[520px] ${
+          interaction.isFullscreen ? "flex-1 h-full min-h-0" : "lg:col-span-3"
         }`}>
           <GraphToolbar
             scenarioName={data.scenario.name}
@@ -103,24 +103,26 @@ function NetworkPage() {
           />
         </div>
 
-        {/* Sidebar (1/4 width) */}
-        <GraphSidebar
-          scenarios={data.scenarios}
-          activeScenarioIdx={data.activeScenarioIdx}
-          selected={data.selected}
-          dynamicEdges={data.dynamicEdges}
-          dynamicInsights={data.dynamicInsights}
-          isInvestigated={data.isInvestigated}
-          isFullscreen={interaction.isFullscreen}
-          scenarioTxIds={data.scenarioTxIds}
-          allTxs={data.allTxs}
-          onSelectScenario={data.setActiveScenarioIdx}
-          onInvestigate={() => {
-            data.handleInvestigateCluster();
-            interaction.showToast(`Jaringan ${data.scenario.name} telah dimasukkan ke Antrean Audit untuk diinvestigasi.`, "success");
-          }}
-          onShowToast={interaction.showToast}
-        />
+        {/* Sidebar (1/4 width in normal mode, fixed sidebar on right in fullscreen) */}
+        <div className={interaction.isFullscreen ? "w-full lg:w-80 h-full overflow-y-auto shrink-0" : ""}>
+          <GraphSidebar
+            scenarios={data.scenarios}
+            activeScenarioIdx={data.activeScenarioIdx}
+            selected={data.selected}
+            dynamicEdges={data.dynamicEdges}
+            dynamicInsights={data.dynamicInsights}
+            isInvestigated={data.isInvestigated}
+            isFullscreen={interaction.isFullscreen}
+            scenarioTxIds={data.scenarioTxIds}
+            allTxs={data.allTxs}
+            onSelectScenario={data.setActiveScenarioIdx}
+            onInvestigate={() => {
+              data.handleInvestigateCluster();
+              interaction.showToast(`Jaringan ${data.scenario.name} telah dimasukkan ke Antrean Audit untuk diinvestigasi.`, "success");
+            }}
+            onShowToast={interaction.showToast}
+          />
+        </div>
       </div>
     </AppShell>
   );

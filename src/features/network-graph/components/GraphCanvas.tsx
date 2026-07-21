@@ -64,7 +64,7 @@ export function GraphCanvas({
     nodes.find((n) => n.id === id) || scenarioNodes.find((n) => n.id === id);
 
   return (
-    <div className="relative flex-1 bg-surface border border-border rounded-lg overflow-hidden flex flex-col h-full min-h-[520px]">
+    <div className="relative flex-1 h-full min-h-0 w-full bg-surface border border-border rounded-lg overflow-hidden flex flex-col">
       {/* Loading Overlay */}
       {loading && (
         <div className="absolute inset-0 bg-card/80 backdrop-blur-sm z-30 flex flex-col items-center justify-center">
@@ -77,7 +77,7 @@ export function GraphCanvas({
       {/* SVG Canvas Workspace */}
       <div
         ref={containerRef}
-        className="relative flex-1 h-full w-full touch-none select-none cursor-grab active:cursor-grabbing min-h-[520px]"
+        className="relative flex-1 h-full min-h-0 w-full touch-none select-none cursor-grab active:cursor-grabbing"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
