@@ -47,7 +47,7 @@ const HIGH_VALUE_THRESHOLDS: Record<PaymentRail, number> = {
 // ─── Score a transaction ────────────────────────────────────────────────────
 
 export function scoreTransaction(tx: RawTransaction): ScoringResult {
-  const h = tx._hints;
+  const h: Record<string, any> = tx._hints || {};
   const indicators: Indicator[] = [];
 
   // 1. Transaction amount relative to rail

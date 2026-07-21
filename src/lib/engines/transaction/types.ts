@@ -69,4 +69,7 @@ export interface RawTransaction {
   // Calculated Features
   velocityCount: number;
   geoDistanceKm: number;
+
+  // Optional scenario hints
+  _hints?: Record<string, boolean>;
 }

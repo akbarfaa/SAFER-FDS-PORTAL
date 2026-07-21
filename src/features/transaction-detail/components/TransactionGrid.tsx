@@ -51,7 +51,7 @@ export function TransactionGrid({ tx }: TransactionGridProps) {
             <div><span className="text-muted-foreground text-xs">Amount:</span> <span className="num font-semibold">{formatIDR(tx.raw.amount)}</span></div>
             <div><span className="text-muted-foreground text-xs">Rail:</span> <span className="rounded bg-accent px-1.5 py-0.5 text-[10px]">{tx.raw.rail}</span>{tx.raw.ewalletProvider && <span className="ml-1 text-xs text-muted-foreground">({tx.raw.ewalletProvider})</span>}</div>
             <div><span className="text-muted-foreground text-xs">Channel:</span> {tx.raw.channel}</div>
-            <div><span className="text-muted-foreground text-xs">Ref:</span> <span className="font-mono text-[10px]">{tx.raw.referenceNumber}</span></div>
+            <div><span className="text-muted-foreground text-xs">Ref:</span> <span className="font-mono text-[10px]">{tx.raw.id}</span></div>
           </div>
         </div>
 
