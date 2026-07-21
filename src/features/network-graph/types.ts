@@ -1,6 +1,6 @@
 /**
  * Network Graph — Enterprise Type Definitions
- * Shared interfaces for graph nodes, edges, scenarios, and styling maps.
+ * Shared interfaces for graph nodes, edges, scenarios, and theme styling maps.
  */
 
 export interface GraphNode {
@@ -32,24 +32,24 @@ export interface GraphScenario {
   insights: string[];
 }
 
-export const NODE_STYLE: Record<GraphNode["type"], { fill: string; stroke: string; icon: string; label: string }> = {
-  account: { fill: "#3b82f6", stroke: "#60a5fa", icon: "🏦", label: "Bank Account" },
-  device: { fill: "#8b5cf6", stroke: "#a78bfa", icon: "📱", label: "Device Fingerprint" },
-  merchant: { fill: "#f59e0b", stroke: "#fbbf24", icon: "🛒", label: "Merchant" },
-  ip: { fill: "#06b6d4", stroke: "#22d3ee", icon: "🌐", label: "IP Address" },
-  crypto: { fill: "#ec4899", stroke: "#f472b6", icon: "🪙", label: "Crypto Wallet" },
-};
+export const NODE_STYLE = {
+  account: { fill: "var(--chart-1)", stroke: "var(--primary)", label: "Bank Account" },
+  device: { fill: "var(--chart-2)", stroke: "var(--warning)", label: "Device Fingerprint" },
+  merchant: { fill: "var(--chart-4)", stroke: "var(--destructive)", label: "Merchant" },
+  ip: { fill: "var(--chart-5)", stroke: "var(--accent)", label: "IP Address" },
+  crypto: { fill: "var(--chart-3)", stroke: "var(--critical)", label: "Crypto Wallet" },
+} as const;
 
 export const RISK_RING: Record<GraphNode["risk"], string> = {
-  low: "#22c55e",
-  medium: "#f59e0b",
-  high: "#f97316",
-  critical: "#ef4444",
+  low: "var(--success)",
+  medium: "var(--warning)",
+  high: "var(--destructive)",
+  critical: "var(--critical)",
 };
 
 export const RISK_BG: Record<GraphNode["risk"], string> = {
-  low: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-  medium: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-  high: "bg-orange-500/10 text-orange-400 border-orange-500/30",
-  critical: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+  low: "bg-success/15 text-success border-success/30",
+  medium: "bg-warning/15 text-warning border-warning/30",
+  high: "bg-destructive/15 text-destructive border-destructive/30",
+  critical: "bg-critical/15 text-critical border-critical/30",
 };

@@ -1,7 +1,19 @@
 /**
- * Network Graph — Sidebar Inspector & Scenario Selector
+ * Network Graph — Theme-Aware Sidebar Inspector & Scenario Selector
  */
-import { ShieldAlert, Network, AlertOctagon, CheckCircle2, Lock, FileSearch, ArrowUpRight } from "lucide-react";
+import {
+  ShieldAlert,
+  Network,
+  AlertOctagon,
+  CheckCircle2,
+  Lock,
+  FileSearch,
+  Landmark,
+  Smartphone,
+  ShoppingBag,
+  Globe,
+  Coins,
+} from "lucide-react";
 import type { GraphScenario, GraphNode, GraphEdge } from "../types";
 import { RISK_BG, NODE_STYLE } from "../types";
 
@@ -19,6 +31,14 @@ interface GraphSidebarProps {
   onInvestigate: () => void;
   onShowToast: (msg: string, type?: "success" | "warning") => void;
 }
+
+const ICON_MAP = {
+  account: Landmark,
+  device: Smartphone,
+  merchant: ShoppingBag,
+  ip: Globe,
+  crypto: Coins,
+};
 
 export function GraphSidebar({
   scenarios,
@@ -40,13 +60,16 @@ export function GraphSidebar({
     <div className="w-full lg:w-80 space-y-4 shrink-0">
       {/* Active Node Detail Inspector Card */}
       {selected ? (
-        <div className="rounded-xl border border-indigo-500/40 bg-slate-900/90 p-5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-right-4 duration-300">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="rounded-lg border border-primary/40 bg-card p-5 shadow-lg animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="flex items-center justify-between border-b border-border pb-3">
             <div className="flex items-center gap-2">
-              <span className="text-xl">{NODE_STYLE[selected.type]?.icon || "🏦"}</span>
+              {(() => {
+                const IconComp = ICON_MAP[selected.type] || Landmark;
+                return <IconComp className="h-5 w-5 text-primary" />;
+              })()}
               <div>
-                <h4 className="text-sm font-bold text-slate-100">{selected.label}</h4>
-                <div className="text-[10px] text-slate-400 font-mono uppercase">{selected.id}</div>
+                <h4 className="text-sm font-bold text-foreground">{selected.label}</h4>
+                <div className="text-[10px] text-muted-foreground font-mono uppercase">{selected.id}</div>
               </div>
             </div>
             <span className={`rounded border px-2 py-0.5 text-[10px] uppercase font-bold ${RISK_BG[selected.risk]}`}>
@@ -55,12 +78,12 @@ export function GraphSidebar({
           </div>
 
           {selected.details && (
-            <div className="mt-3 space-y-2 rounded-lg border border-slate-800 bg-slate-950/60 p-3 text-xs">
-              <div className="text-[10px] uppercase font-bold text-slate-500">Entity Metadata</div>
+            <div className="mt-3 space-y-2 rounded-md border border-border bg-surface p-3 text-xs">
+              <div className="text-[10px] uppercase font-bold text-muted-foreground">Entity Metadata</div>
               {Object.entries(selected.details).map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-2 text-slate-300">
-                  <span className="capitalize text-slate-400">{k}:</span>
-                  <span className="font-mono text-slate-200 truncate max-w-[140px]">{v}</span>
+                <div key={k} className="flex justify-between gap-2 text-foreground">
+                  <span className="capitalize text-muted-foreground">{k}:</span>
+                  <span className="font-mono truncate max-w-[140px]">{v}</span>
                 </div>
               ))}
             </div>
@@ -69,7 +92,7 @@ export function GraphSidebar({
           <div className="mt-4 space-y-2">
             <button
               onClick={() => onShowToast(`Entity ${selected.id} has been flagged & held for fraud review.`, "success")}
-              className="w-full inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-rose-600 px-3 text-xs font-semibold text-white hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/20"
+              className="w-full inline-flex h-9 items-center justify-center gap-2 rounded-md bg-destructive px-3 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors shadow"
             >
               <Lock className="h-3.5 w-3.5" /> Freeze Entity &amp; Hold Funds
             </button>
@@ -79,18 +102,18 @@ export function GraphSidebar({
                 link.href = "/audit";
                 link.click();
               }}
-              className="w-full inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+              className="w-full inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-accent transition-colors"
             >
-              <FileSearch className="h-3.5 w-3.5 text-indigo-400" /> Open in Audit Queue
+              <FileSearch className="h-3.5 w-3.5 text-primary" /> Open in Audit Queue
             </button>
           </div>
         </div>
       ) : (
         /* Scenario Selector Card */
-        <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-5 shadow-xl backdrop-blur-md">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3 mb-4">
-            <Network className="h-4 w-4 text-indigo-400" />
-            <h3 className="text-sm font-bold text-slate-100">Investigasi Skenario Fraud</h3>
+        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
+            <Network className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-bold text-foreground">Investigasi Skenario Fraud</h3>
           </div>
 
           <div className="space-y-2.5">
@@ -102,17 +125,17 @@ export function GraphSidebar({
                   onClick={() => onSelectScenario(idx)}
                   className={`w-full text-left p-3.5 rounded-lg border transition-all duration-200 ${
                     isActive
-                      ? "border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10"
-                      : "border-slate-800 bg-slate-950/40 hover:bg-slate-800/60"
+                      ? "border-primary bg-primary/10 shadow-sm"
+                      : "border-border bg-surface hover:bg-accent"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-200">{sc.name}</span>
+                    <span className="text-xs font-bold text-foreground">{sc.name}</span>
                     <span className={`rounded border px-1.5 py-0.5 text-[9px] uppercase font-bold ${RISK_BG[sc.severity]}`}>
                       {sc.severity}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
+                  <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
                     {sc.description}
                   </p>
                 </button>
@@ -120,14 +143,14 @@ export function GraphSidebar({
             })}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-800">
+          <div className="mt-4 pt-3 border-t border-border">
             <button
               onClick={onInvestigate}
               disabled={isInvestigated}
-              className={`w-full inline-flex h-9 items-center justify-center gap-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`w-full inline-flex h-9 items-center justify-center gap-2 rounded-md text-xs font-semibold transition-all ${
                 isInvestigated
-                  ? "bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed"
-                  : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/25"
+                  ? "bg-accent text-muted-foreground border border-border cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
               }`}
             >
               <ShieldAlert className="h-3.5 w-3.5" />
@@ -139,16 +162,16 @@ export function GraphSidebar({
 
       {/* Cluster Intelligence Insights Card */}
       {dynamicInsights && dynamicInsights.length > 0 && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-5 shadow-xl backdrop-blur-md">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3 mb-3">
-            <AlertOctagon className="h-4 w-4 text-amber-400" />
-            <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Intelijen Klaster</h4>
+        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-border pb-3 mb-3">
+            <AlertOctagon className="h-4 w-4 text-warning" />
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Intelijen Klaster</h4>
           </div>
           <div className="space-y-2">
             {dynamicInsights.map((insight, idx) => (
-              <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
-                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-400" />
-                <span className="leading-relaxed">{insight}</span>
+              <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                <span className="leading-relaxed text-foreground">{insight}</span>
               </div>
             ))}
           </div>
