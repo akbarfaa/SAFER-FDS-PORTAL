@@ -1,4 +1,4 @@
 /**
  * Risk Scoring Engine Re-export
  */
-export * from "./scoring";
+export * from "./scoring/index";
