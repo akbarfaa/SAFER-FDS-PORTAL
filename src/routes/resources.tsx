@@ -112,8 +112,8 @@ function ResourcesPage() {
               <a href="https://api.safer.web.id/docs" target="_blank" rel="noreferrer" className="hover:text-foreground">API Docs</a>
             </div>
           </div>
-          <div className="rounded-xl border border-warning/20 bg-warning/5 p-4 text-xs leading-relaxed text-muted-foreground">
-            <span className="font-semibold text-warning">
+          <div className="rounded-xl border border-border bg-card p-4 text-xs leading-relaxed text-muted-foreground shadow-sm">
+            <span className="font-semibold text-foreground">
               {isEn ? "Industry Disclaimer:" : "Pernyataan Penyangkalan (Disclaimer Industri):"}
             </span>{" "}
             {isEn 

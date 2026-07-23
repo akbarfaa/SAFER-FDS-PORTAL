@@ -207,12 +207,12 @@ function BusinessPage() {
       </div>
 
       {/* ─── On-Premise Setup Fee Banner ─── */}
-      <div className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm font-bold text-emerald-300">
-            <ShieldCheck className="h-4 w-4" /> {isEn ? "On-Premise Setup Fee: Rp 100 Million ($6,600 One-Time)" : "On-Premise Setup Fee: Rp 100 Juta (Satu Kali)"}
+          <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <ShieldCheck className="h-4 w-4 text-primary" /> {isEn ? "On-Premise Setup Fee: Rp 100 Million ($6,600 One-Time)" : "On-Premise Setup Fee: Rp 100 Juta (Satu Kali)"}
           </div>
-          <p className="text-xs text-emerald-200/80">
+          <p className="text-xs text-muted-foreground">
             {isEn 
               ? "For enterprise banks & large financial institutions requiring air-gapped deployments or private cloud enclaves for UU PDP data sovereignty. Includes installation, custom ML pipelines, and analyst team training."
               : "Khusus institusi perbankan & e-wallet skala besar yang membutuhkan air-gapped deployment atau private cloud enclave untuk kepatuhan UU PDP & kedaulatan data. Termasuk instalasi, kustomisasi pipeline ML, dan pelatihan tim analis."}

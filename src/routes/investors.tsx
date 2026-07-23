@@ -1,17 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { 
-  TrendingUp, 
-  ShieldCheck, 
-  Building2, 
-  Zap, 
-  Users, 
-  DollarSign, 
-  CheckCircle2, 
-  ArrowUpRight, 
-  Mail, 
-  MessageSquare, 
-  FileText, 
+import {
+  TrendingUp,
+  ShieldCheck,
+  Building2,
+  Zap,
+  Users,
+  DollarSign,
+  CheckCircle2,
+  ArrowUpRight,
+  Mail,
+  MessageSquare,
+  FileText,
   HelpCircle,
   X,
   Send,
@@ -34,9 +34,9 @@ export const Route = createFileRoute("/investors")({
   head: () => ({
     meta: [
       { title: "Investor & Growth Relations Portal · SAFER FDS" },
-      { 
-        name: "description", 
-        content: "Halaman Hubungan Investor SAFER — Proyeksi finansial, model bisnis B2B SaaS, unit economics, dan peluang pendanaan pre-seed FDS pembayaran digital Indonesia." 
+      {
+        name: "description",
+        content: "Halaman Hubungan Investor SAFER — Proyeksi finansial, model bisnis B2B SaaS, unit economics, dan peluang pendanaan pre-seed FDS pembayaran digital Indonesia."
       },
       {
         name: "keywords",
@@ -66,7 +66,7 @@ function InvestorPage() {
   const handleConsultSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     try {
       const res = await fetch("https://api.safer.web.id/api/leads", {
         method: "POST",
@@ -93,7 +93,7 @@ function InvestorPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-primary selection:text-primary-foreground">
-      
+
       {/* ─── STANDALONE INVESTOR TOP BAR (NO SIDEBAR LAYOUT) ─── */}
       <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-border bg-background/80 px-4 md:px-8 backdrop-blur-md">
         <div className="flex items-center gap-3">
@@ -124,18 +124,18 @@ function InvestorPage() {
 
       {/* ─── MAIN INVESTOR PITCH CONTENT (FULL WIDTH) ─── */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-10">
-        
+
         {/* ─── SPECIAL HERO BANNER WITH EXPLORE CTA ─── */}
         <div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-br from-card via-card/90 to-primary/15 p-6 md:p-10 shadow-2xl">
           <div className="absolute -top-32 -right-32 h-80 w-80 rounded-full bg-primary/25 blur-3xl pointer-events-none" />
           <div className="relative z-10 space-y-5">
-            
+
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-400">
                 <ShieldCheck className="h-4 w-4" /> {isEn ? "Executive Pitching Brief · PIDI x DIGDAYA 2026 Hackathon" : "Standalone Pitching Executive Summary · Hackathon PIDI x DIGDAYA 2026"}
               </div>
 
-              <Link 
+              <Link
                 to="/dashboard"
                 className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 font-medium"
               >
@@ -149,7 +149,7 @@ function InvestorPage() {
             </h1>
 
             <p className="max-w-3xl text-sm md:text-base text-muted-foreground leading-relaxed">
-              {isEn 
+              {isEn
                 ? "SAFER is a high-performance B2B SaaS AI Analytics Layer for Indonesian Payment Service Providers (PJP) — Tier-1/2 banks and fintechs. Combining real-time ML Scoring V3 (<50ms), SHAP Explainable AI, and Network Graph Intelligence to secure QRIS & BI-FAST transactions."
                 : "SAFER adalah B2B SaaS AI Analytics Layer berkinerja tinggi untuk institusi Penyelenggara Jasa Pembayaran (PJP) — bank BUKU 3/4 dan fintech Indonesia. Memadukan ML Scoring V3 real-time (<50ms), SHAP Explainable AI, dan Graph Intelligence untuk mengamankan transaksi QRIS & BI-FAST."}
             </p>
@@ -162,7 +162,7 @@ function InvestorPage() {
               >
                 <MessageSquare className="h-4 w-4" /> {isEn ? "Contact SAFER Founders Team" : "Hubungi & Konsultasi Tim SAFER"} <ArrowUpRight className="h-4 w-4" />
               </button>
-              
+
               <Link
                 to="/"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-card/90 px-6 py-3.5 text-sm font-bold text-foreground hover:bg-primary/10 hover:border-primary transition-all"
@@ -176,33 +176,33 @@ function InvestorPage() {
         {/* ─── Top Stats Highlights ─── */}
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            { 
-              label: isEn ? "Target Fraud Losses Saved" : "Target Fraud Losses Saved", 
-              val: "Rp 7.3 Trillion", 
-              desc: isEn ? "311,597 OJK Reported Scam Cases" : "311.597 Kasus Scam OJK", 
-              icon: ShieldCheck, 
-              color: "text-amber-400" 
+            {
+              label: isEn ? "Target Fraud Losses Saved" : "Target Fraud Losses Saved",
+              val: "Rp 7.3 Trillion",
+              desc: isEn ? "311,597 OJK Reported Scam Cases" : "311.597 Kasus Scam OJK",
+              icon: ShieldCheck,
+              color: "text-amber-400"
             },
-            { 
-              label: isEn ? "Projected Investor ROI (Yr 1)" : "Proyeksi Investor ROI (Yr 1)", 
-              val: "455% ROI", 
-              desc: isEn ? "Post 3-Month Free Shadow Mode" : "Pasca-Shadow Mode 3 Bulan", 
-              icon: TrendingUp, 
-              color: "text-emerald-400" 
+            {
+              label: isEn ? "Projected Investor ROI (Yr 1)" : "Proyeksi Investor ROI (Yr 1)",
+              val: "455% ROI",
+              desc: isEn ? "Post 3-Month Free Shadow Mode" : "Pasca-Shadow Mode 3 Bulan",
+              icon: TrendingUp,
+              color: "text-emerald-400"
             },
-            { 
-              label: isEn ? "Operational Break-Even" : "Operational Break-Even", 
-              val: "2 Business + 1 Enterprise", 
-              desc: isEn ? "Active Clients to Cover Fixed Costs" : "Klien Aktif Impas", 
-              icon: Building2, 
-              color: "text-cyan-400" 
+            {
+              label: isEn ? "Operational Break-Even" : "Operational Break-Even",
+              val: "2 Business + 1 Enterprise",
+              desc: isEn ? "Active Clients to Cover Fixed Costs" : "Klien Aktif Impas",
+              icon: Building2,
+              color: "text-cyan-400"
             },
-            { 
-              label: isEn ? "Pre-Seed Investment Ask" : "Pre-Seed Ask", 
-              val: "Rp 150 Million", 
-              desc: isEn ? "Servers & ISO 27001 Certification" : "Server & Sertifikasi ISO 27001", 
-              icon: DollarSign, 
-              color: "text-purple-400" 
+            {
+              label: isEn ? "Pre-Seed Investment Ask" : "Pre-Seed Ask",
+              val: "Rp 150 Million",
+              desc: isEn ? "Servers & ISO 27001 Certification" : "Server & Sertifikasi ISO 27001",
+              icon: DollarSign,
+              color: "text-purple-400"
             },
           ].map((stat, i) => {
             const Icon = stat.icon;
@@ -252,7 +252,7 @@ function InvestorPage() {
               {isEn ? "Bank Indonesia PBI No. 10/2025 Forces Integrated FDS Adopsi" : "PBI No. 10/2025 Memaksa Adopsi FDS Terintegrasi"}
             </h3>
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-              {isEn 
+              {isEn
                 ? "Bank Indonesia officially mandates all Payment Service Providers (PJP) to operate an integrated anti-fraud infrastructure. SAFER acts as a compliant auxiliary AI layer governed by Human-in-the-Loop principles."
                 : "Bank Indonesia secara resmi mewajibkan seluruh Penyelenggara Jasa Pembayaran (PJP) memiliki infrastruktur penanganan fraud otomatis. SAFER memposisikan diri sebagai penyedia teknologi penunjang yang patuh regulasi dengan prinsip Human-in-the-Loop."}
             </p>
@@ -280,7 +280,7 @@ function InvestorPage() {
                 <Database className="h-4 w-4" /> 1. ML Scoring Engine V3
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "XGBoost + LightGBM ensemble processing 33 features (including cyclical hour hour_sin & hour_cos and financial ratio features)."
                   : "Ensemble XGBoost + LightGBM memproses 33 fitur (termasuk fitur siklikal jam hour_sin & hour_cos serta rasio finansial)."}
               </p>
@@ -294,7 +294,7 @@ function InvestorPage() {
                 <Layers className="h-4 w-4" /> 2. Explainable AI (SHAP)
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "Translates marginal feature contributions into concise audit reasoning tailored for Indonesian banking SOPs without black-box opacity."
                   : "Menerjemahkan kontribusi marjinal fitur menjadi penjelasan ringkas berbasis terminologi SOP perbankan Indonesia tanpa sifat black-box."}
               </p>
@@ -308,7 +308,7 @@ function InvestorPage() {
                 <Building2 className="h-4 w-4" /> 3. Graph Intelligence
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "NetworkX maps 5-tier topology (IP → Device → Sender → Receiver → Merchant) uncovering money laundering & mule accounts."
                   : "NetworkX memetakan topologi hierarki 5 tingkat (IP → Device → Sender → Receiver → Merchant) untuk mengungkap pencucian uang & Mule Ring."}
               </p>
@@ -337,7 +337,7 @@ function InvestorPage() {
               <div className="text-xs font-semibold text-primary uppercase tracking-wider">{isEn ? "Client ROI (Tier Business)" : "Proyeksi ROI Klien (Tier Business)"}</div>
               <div className="text-2xl font-extrabold text-foreground">&gt; 1,000% ROI</div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "Assumes Rp 500M/mo fraud loss. Savings Rp 3B/yr + staff efficiency Rp 120M/yr = Benefit Rp 3.12B vs Investment Rp 280M."
                   : "Asumsi fraud Rp 500 Juta/bln. Hemat fraud Rp 3 Miliar/thn + efisiensi staf Rp 120 Juta/thn = Benefit Rp 3,12 Miliar vs Biaya Rp 280 Juta."}
               </p>
@@ -351,7 +351,7 @@ function InvestorPage() {
               <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">{isEn ? "Operational Break-Even Point" : "Break-Even Point (BEP) Operasional"}</div>
               <div className="text-2xl font-extrabold text-foreground">2 Business + 1 Enterprise</div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "Monthly operational break-even is achieved rapidly with just 2 Tier Business and 1 Tier Enterprise active clients."
                   : "Impas operasional bulanan SAFER tercapai secara cepat hanya dengan 2 klien Tier Business dan 1 klien Tier Enterprise aktif secara bersamaan."}
               </p>
@@ -365,7 +365,7 @@ function InvestorPage() {
               <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">{isEn ? "Investor ROI (Post-Shadow Mode)" : "Proyeksi ROI Investor (Pasca-Shadow)"}</div>
               <div className="text-2xl font-extrabold text-foreground">455% ROI (4.55x)</div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "Post 3-month free Shadow Mode (Months 1-3). 5 paid Tier Business clients for 9 months = Gross Rev Rp 675M vs Exp Rp 220M → Net Profit Rp 455M."
                   : "Pasca-Shadow Mode 3 bulan gratis (Bulan 1–3). 5 klien Tier Business berbayar 9 bulan = Gross Rev Rp 675 Juta vs Exp Rp 220 Juta → Net Profit Rp 455 Juta."}
               </p>
@@ -416,12 +416,12 @@ function InvestorPage() {
           </div>
 
           {/* Disclaimer Box */}
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 text-xs text-amber-300 space-y-1.5">
-            <div className="flex items-center gap-2 font-bold text-sm">
-              <HelpCircle className="h-4 w-4" /> {isEn ? "Financial Disclaimer & Projections Note:" : "Disclaimer Finansial & Proyeksi:"}
+          <div className="rounded-xl border border-border bg-card p-5 text-xs text-foreground space-y-1.5 shadow-sm">
+            <div className="flex items-center gap-2 font-bold text-sm text-foreground">
+              <HelpCircle className="h-4 w-4 text-muted-foreground" /> {isEn ? "Financial Disclaimer & Projections Note:" : "Disclaimer Finansial & Proyeksi:"}
             </div>
-            <p className="leading-relaxed text-xs text-amber-200/90">
-              {isEn 
+            <p className="leading-relaxed text-xs text-muted-foreground">
+              {isEn
                 ? "All figures above are preliminary estimates and will be definitively recalculated after all fixed costs, variable costs, and initial contingency costs are finalized together with strategic investment partners."
                 : "Seluruh angka di atas merupakan proyeksi estimasi awal berdasarkan benchmark pasar dan akan dihitung kembali secara definitif setelah struktur biaya tetap (fixed cost), biaya variabel (variable cost), serta alokasi dana tidak terduga (contingency cost) pada awal fase implementasi ditetapkan secara final bersama mitra investor."}
             </p>
@@ -450,7 +450,7 @@ function InvestorPage() {
               <div className="font-bold text-foreground text-sm">Neyla Lian Syatifa</div>
               <div className="text-xs font-semibold text-purple-400">UX Design & Business Domain Lead</div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "Designs dashboard system, investigation workflows, Fraud Graph, and usability testing. Leads BI/OJK/PPATK compliance, Human-in-the-Loop alignment, B2B SaaS monetization, and ASPI association outreach."
                   : "Merancang sistem desain dashboard, alur investigasi, Fraud Graph, dan pengujian usability. Memimpin kepatuhan regulasi (BI, OJK, PPATK) berbasis human-in-the-loop, skema B2B SaaS, dan asosiasi ASPI."}
               </p>
@@ -460,7 +460,7 @@ function InvestorPage() {
               <div className="font-bold text-foreground text-sm">Amadeus Christiano</div>
               <div className="text-xs font-semibold text-cyan-400">Frontend & Client Demo Lead</div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {isEn 
+                {isEn
                   ? "Develops React/TypeScript UI (0 build errors), Monitoring Dashboard, Audit Queue, Risk Simulator, Fraud Graph, ensures intuitive analyst UX, and leads technical client demonstrations."
                   : "Mengembangkan komponen React/TypeScript (0 error build), Monitoring Dashboard, Audit Queue, Risk Simulator, dan Fraud Graph, memastikan UX ramah analis, serta memimpin demonstrasi teknis ke calon klien."}
               </p>
@@ -472,7 +472,7 @@ function InvestorPage() {
               <Users className="h-4 w-4 text-primary" /> {isEn ? "Team Expansion Plan & Advisory Mentorship:" : "Rencana Ekspansi Tim & Pendampingan Ahli:"}
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              {isEn 
+              {isEn
                 ? "Looking ahead, the development team will expand from 3 to 5 members (adding 1 DevOps Engineer and 1 Fullstack Engineer) accompanied by Business Advisory Mentors and Banking Regulatory Legal Mentors."
                 : "Ke depan, tim developer akan diperluas dari 3 menjadi 5 orang (menambah 1 DevOps Engineer dan 1 Fullstack Engineer) dengan pendampingan Mentor Bisnis untuk skala komersial dan Mentor Hukum Regulasi Perbankan."}
             </p>
@@ -484,7 +484,7 @@ function InvestorPage() {
           <Award className="h-12 w-12 text-primary mx-auto" />
           <h2 className="text-2xl md:text-3xl font-bold text-foreground">{isEn ? "Interested in Strategic Discussions or Investment?" : "Tertarik Berdiskusi atau Berinvestasi di SAFER?"}</h2>
           <p className="max-w-2xl mx-auto text-xs md:text-sm text-muted-foreground leading-relaxed">
-            {isEn 
+            {isEn
               ? "We welcome discussions for Pre-Seed funding (Rp 150 Million), pilot project partnerships, or business advisory. Reach out directly to SAFER founders."
               : "Kami membuka pintu diskusi untuk pendanaan Pre-Seed (Rp 150 Juta), kemitraan strategis pilot project, maupun advisori bisnis. Hubungi tim pendiri SAFER secara langsung."}
           </p>
@@ -510,7 +510,7 @@ function InvestorPage() {
       <footer className="border-t border-border bg-card/40 py-6 text-center text-xs text-muted-foreground">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            © {new Date().getFullYear()} SAFER FDS Team — Universitas Trilogi. All rights reserved.
+            © {new Date().getFullYear()} SAFER — Prototype for demonstration purposes.
           </div>
           <div className="flex items-center gap-4">
             <Link to="/" className="hover:text-foreground">{isEn ? "Main Portal" : "Portal Utama"}</Link>
@@ -524,8 +524,8 @@ function InvestorPage() {
       {isConsultModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
           <div className="relative w-full max-w-lg rounded-3xl border border-primary/40 bg-card shadow-2xl p-6 md:p-8 overflow-hidden max-h-[90vh] overflow-y-auto">
-            <button 
-              onClick={() => { setIsConsultModalOpen(false); setSubmitted(false); }} 
+            <button
+              onClick={() => { setIsConsultModalOpen(false); setSubmitted(false); }}
               className="absolute top-5 right-5 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-5 w-5" />
@@ -537,7 +537,7 @@ function InvestorPage() {
                   <TrendingUp className="h-10 w-10 text-primary mx-auto mb-2" />
                   <h3 className="text-xl font-bold text-foreground">{isEn ? "SAFER Investor Inquiry Form" : "Konsultasi & Inquiry Investor SAFER"}</h3>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    {isEn 
+                    {isEn
                       ? "Submit your investment interest or strategic partnership query. Our team will respond within 24 hours."
                       : "Sampaikan minat investasi atau kemitraan strategis Anda. Tim kami akan merespons dalam 1x24 jam."}
                   </p>
@@ -546,8 +546,8 @@ function InvestorPage() {
                 <div className="space-y-3 text-xs">
                   <div>
                     <label className="block font-semibold text-muted-foreground uppercase mb-1">{isEn ? "Full Name" : "Nama Lengkap"}</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       placeholder={isEn ? "Your Name" : "Nama Anda"}
                       value={formData.name}
@@ -558,8 +558,8 @@ function InvestorPage() {
 
                   <div>
                     <label className="block font-semibold text-muted-foreground uppercase mb-1">{isEn ? "Company / Firm / Fund Name" : "Perusahaan / Venture Capital / Angel Fund"}</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       required
                       placeholder={isEn ? "Firm Name" : "Nama Firma / Dana Investasi"}
                       value={formData.firm}
@@ -571,8 +571,8 @@ function InvestorPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block font-semibold text-muted-foreground uppercase mb-1">{isEn ? "Professional Email" : "Email Profesional"}</label>
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         required
                         placeholder="investor@firm.com"
                         value={formData.email}
@@ -582,8 +582,8 @@ function InvestorPage() {
                     </div>
                     <div>
                       <label className="block font-semibold text-muted-foreground uppercase mb-1">{isEn ? "WhatsApp / Phone" : "Nomor WhatsApp / HP"}</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         placeholder="+62 812 xxxx xxxx"
                         value={formData.phone}
                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
@@ -608,7 +608,7 @@ function InvestorPage() {
 
                   <div>
                     <label className="block font-semibold text-muted-foreground uppercase mb-1">{isEn ? "Message / Note" : "Pesan / Catatan Tambahan"}</label>
-                    <textarea 
+                    <textarea
                       rows={3}
                       placeholder={isEn ? "Briefly describe your discussion focus or investment thesis..." : "Jelaskan secara ringkas fokus diskusi atau kriteria investasi Anda..."}
                       value={formData.message}
@@ -639,7 +639,7 @@ function InvestorPage() {
                 <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto" />
                 <h3 className="text-lg font-bold text-foreground">{isEn ? "Inquiry Sent Successfully!" : "Formulir Berhasil Terkirim!"}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {isEn 
+                  {isEn
                     ? "Thank you for your interest in SAFER FDS. Your inquiry has been routed directly to the founding team (Akbar Fadhila & Team). We will reach back within 24 hours."
                     : "Terima kasih atas minat Anda pada SAFER FDS. Pesan Anda telah diteruskan langsung ke tim pendiri (Akbar Fadhila & Tim). Kami akan menghubungi Anda kembali dalam waktu maksimal 1x24 jam."}
                 </p>

@@ -52,7 +52,7 @@ export function ArticleList({ articles, selectedId, onSelect }: ArticleListProps
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 text-center mt-6 shadow-sm">
-        <HelpCircle className="h-8 w-8 text-amber-400 mx-auto mb-2" />
+        <HelpCircle className="h-8 w-8 text-primary mx-auto mb-2" />
         <h5 className="text-xs font-bold text-foreground">
           {isEn ? "Interested in Testing API Integration?" : "Tertarik Menguji Coba Integrasi API?"}
         </h5>
@@ -62,7 +62,7 @@ export function ArticleList({ articles, selectedId, onSelect }: ArticleListProps
             : "Dapatkan akses langsung ke Sandbox FDS Developer Hub untuk mensimulasikan skoring secara mandiri."}
         </p>
         <div className="mt-4">
-          <span className="inline-block text-[10px] font-bold text-amber-300 border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 rounded-lg uppercase">
+          <span className="inline-block text-[10px] font-bold text-foreground border border-border bg-muted/40 px-2.5 py-1.5 rounded-lg uppercase">
             {isEn ? "API Sandbox Access Available via Developer Hub" : "Akses API Sandbox Tersedia via Request Demo"}
           </span>
         </div>
