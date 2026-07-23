@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as NetworkRouteImport } from './routes/network'
+import { Route as InvestorsRouteImport } from './routes/investors'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ComplianceRouteImport } from './routes/compliance'
@@ -34,6 +35,11 @@ const ResourcesRoute = ResourcesRouteImport.update({
 const NetworkRoute = NetworkRouteImport.update({
   id: '/network',
   path: '/network',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestorsRoute = InvestorsRouteImport.update({
+  id: '/investors',
+  path: '/investors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeveloperRoute = DeveloperRouteImport.update({
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/compliance': typeof ComplianceRoute
   '/dashboard': typeof DashboardRoute
   '/developer': typeof DeveloperRoute
+  '/investors': typeof InvestorsRoute
   '/network': typeof NetworkRoute
   '/resources': typeof ResourcesRoute
   '/simulator': typeof SimulatorRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/compliance': typeof ComplianceRoute
   '/dashboard': typeof DashboardRoute
   '/developer': typeof DeveloperRoute
+  '/investors': typeof InvestorsRoute
   '/network': typeof NetworkRoute
   '/resources': typeof ResourcesRoute
   '/simulator': typeof SimulatorRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/compliance': typeof ComplianceRoute
   '/dashboard': typeof DashboardRoute
   '/developer': typeof DeveloperRoute
+  '/investors': typeof InvestorsRoute
   '/network': typeof NetworkRoute
   '/resources': typeof ResourcesRoute
   '/simulator': typeof SimulatorRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/dashboard'
     | '/developer'
+    | '/investors'
     | '/network'
     | '/resources'
     | '/simulator'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/dashboard'
     | '/developer'
+    | '/investors'
     | '/network'
     | '/resources'
     | '/simulator'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/compliance'
     | '/dashboard'
     | '/developer'
+    | '/investors'
     | '/network'
     | '/resources'
     | '/simulator'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   ComplianceRoute: typeof ComplianceRoute
   DashboardRoute: typeof DashboardRoute
   DeveloperRoute: typeof DeveloperRoute
+  InvestorsRoute: typeof InvestorsRoute
   NetworkRoute: typeof NetworkRoute
   ResourcesRoute: typeof ResourcesRoute
   SimulatorRoute: typeof SimulatorRoute
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/network'
       fullPath: '/network'
       preLoaderRoute: typeof NetworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investors': {
+      id: '/investors'
+      path: '/investors'
+      fullPath: '/investors'
+      preLoaderRoute: typeof InvestorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/developer': {
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComplianceRoute: ComplianceRoute,
   DashboardRoute: DashboardRoute,
   DeveloperRoute: DeveloperRoute,
+  InvestorsRoute: InvestorsRoute,
   NetworkRoute: NetworkRoute,
   ResourcesRoute: ResourcesRoute,
   SimulatorRoute: SimulatorRoute,

@@ -15,14 +15,14 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
     position: "",
     interest_model: "SaaS Payment Gateway",
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [successData, setSuccessData] = useState<{
     client_id: string;
     client_secret: string;
     company: string;
   } | null>(null);
-  
+
   const [copiedId, setCopiedId] = useState(false);
   const [copiedSecret, setCopiedSecret] = useState(false);
 
@@ -71,8 +71,8 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-md rounded-xl border border-border bg-card shadow-2xl p-6 overflow-hidden">
         {/* Close Button */}
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="h-5 w-5" />
@@ -92,8 +92,8 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">Nama Lengkap</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   placeholder="Budi Santoso"
                   value={formData.name}
@@ -104,8 +104,8 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
 
               <div>
                 <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">Email Perusahaan</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
                   placeholder="budi@bankmitra.co.id"
                   value={formData.email}
@@ -117,8 +117,8 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">Nama Perusahaan</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     placeholder="Bank Mandiri / BNI"
                     value={formData.company}
@@ -128,8 +128,8 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
                 </div>
                 <div>
                   <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">Jabatan / Posisi</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     required
                     placeholder="IT Security Manager"
                     value={formData.position}
@@ -141,7 +141,7 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
 
               <div>
                 <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">Pilihan Skema Bisnis</label>
-                <select 
+                <select
                   value={formData.interest_model}
                   onChange={e => setFormData({ ...formData, interest_model: e.target.value })}
                   className="w-full rounded border border-border bg-surface px-3 py-2 text-xs focus:outline-none focus:border-primary"
@@ -153,8 +153,8 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
               className="w-full mt-4 inline-flex h-9 items-center justify-center gap-1.5 rounded bg-primary text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
@@ -186,7 +186,7 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
               <div>
                 <div className="flex justify-between items-center text-[10px] font-semibold text-muted-foreground uppercase mb-1">
                   <span>Client ID</span>
-                  <button 
+                  <button
                     onClick={() => copyToClipboard(successData.client_id, "id")}
                     className="flex items-center gap-1 text-[10px] text-primary hover:underline"
                   >
@@ -202,7 +202,7 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
               <div>
                 <div className="flex justify-between items-center text-[10px] font-semibold text-muted-foreground uppercase mb-1">
                   <span>Client Secret</span>
-                  <button 
+                  <button
                     onClick={() => copyToClipboard(successData.client_secret, "secret")}
                     className="flex items-center gap-1 text-[10px] text-primary hover:underline"
                   >
@@ -220,7 +220,7 @@ export function LeadRegistrationModal({ isOpen, onClose }: LeadRegistrationModal
               <span className="font-semibold text-warning">Panduan Uji Coba:</span> Kamu dapat langsung memasukkan pasangan Client ID & Secret ini di menu **API Sandbox** untuk menguji integrasi API live dengan kredensial partner kustom kamu.
             </div>
 
-            <button 
+            <button
               onClick={onClose}
               className="w-full inline-flex h-9 items-center justify-center rounded border border-border bg-card text-xs font-semibold transition-colors hover:bg-accent"
             >
