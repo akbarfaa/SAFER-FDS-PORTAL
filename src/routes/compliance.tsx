@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/safer/AppShell";
 import { Lock, ShieldCheck, FileText, KeyRound, EyeOff, Users, GitBranch, Server } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export const Route = createFileRoute("/compliance")({
   head: () => ({
@@ -21,45 +22,97 @@ export const Route = createFileRoute("/compliance")({
   component: CompliancePage,
 });
 
-const CONTROLS = [
-  { icon: Lock, t: "AES-256 encryption", d: "All data at rest and in transit encrypted with managed KMS rotation." },
-  { icon: KeyRound, t: "Role-based access (RBAC)", d: "Granular roles for analyst, supervisor, auditor and admin with separation of duties." },
-  { icon: FileText, t: "Immutable audit logs", d: "Tamper-evident logging of every model decision and analyst action." },
-  { icon: EyeOff, t: "Anonymized inference", d: "PII tokenized before reaching scoring models — only required signals propagate." },
-  { icon: Server, t: "API security", d: "mTLS, signed payloads, replay protection and per-tenant rate limits." },
-  { icon: Users, t: "Explainable AI governance", d: "Every score returns feature weights and natural-language rationale." },
-  { icon: GitBranch, t: "Compliance-by-design", d: "DPIA workflows, retention controls and data residency built into the platform." },
-  { icon: ShieldCheck, t: "Incident response", d: "Documented runbooks with regulator-ready incident reports in under 4 hours." },
-];
-
-const MATURITY = [
-  { area: "Data protection (UU PDP)", level: 92 },
-  { area: "OJK POJK 11 IT risk", level: 88 },
-  { area: "BI anti-fraud reporting", level: 84 },
-  { area: "ISO 27001 controls", level: 90 },
-  { area: "Model governance", level: 86 },
-];
-
 function CompliancePage() {
+  const { language } = useTranslation();
+  const isEn = language === "en";
+
+  const CONTROLS = [
+    { 
+      icon: Lock, 
+      t: isEn ? "SHA-256 PII Hashing & AES-256" : "Enkripsi AES-256 & SHA-256 Hashing PII", 
+      d: isEn ? "Identifiable information hashed before reaching AI scoring engine; data at rest encrypted." : "Informasi identitas di-hash SHA-256 sebelum diproses AI; data tersimpan dienkripsi AES-256." 
+    },
+    { 
+      icon: KeyRound, 
+      t: isEn ? "Role-based access (RBAC)" : "Akses Berbasis Peran (RBAC)", 
+      d: isEn ? "Granular roles for analyst, supervisor, auditor and admin with separation of duties." : "Akses bertingkat untuk analis, supervisor, auditor, dan admin dengan pemisahan wewenang." 
+    },
+    { 
+      icon: FileText, 
+      t: isEn ? "Immutable audit logs" : "Jejak Audit Tak Terkoyak (Immutable)", 
+      d: isEn ? "Tamper-evident logging of every model decision and analyst action for PPATK/BI audit." : "Pencatatan setiap keputusan model & aksi analis yang siap diaudit PPATK & Bank Indonesia." 
+    },
+    { 
+      icon: EyeOff, 
+      t: isEn ? "Offline Backtesting Anonymization" : "Anonimisasi Offline Backtesting POC", 
+      d: isEn ? "Historical client test data must be PII-masked before evaluation pipelines run." : "Data uji historis mitra wajib di-anonimkan (PII Masked) sebelum dievaluasi." 
+    },
+    { 
+      icon: Server, 
+      t: isEn ? "B2B API Authentication" : "Autentikasi API B2B (X-Client)", 
+      d: isEn ? "Secure B2B authentication via X-Client-ID & X-Client-Secret headers with rate limiting." : "Autentikasi B2B aman menggunakan header X-Client-ID & X-Client-Secret." 
+    },
+    { 
+      icon: Users, 
+      t: isEn ? "Human-in-the-Loop Governance" : "Tata Kelola Human-in-the-Loop", 
+      d: isEn ? "AI acts as CoPilot; final execution authority remains with financial institution analysts." : "AI berfungsi sebagai CoPilot; wewenang keputusan akhir di tangan analis institusi." 
+    },
+    { 
+      icon: GitBranch, 
+      t: isEn ? "Compliance-by-design" : "Kepatuhan Berbasis Desain (UU PDP)", 
+      d: isEn ? "Built natively for UU PDP No. 27/2022, PBI No. 10/2025 and OJK POJK 11 directives." : "Dirancang selaras dengan UU PDP No. 27/2022, PBI No. 10/2025, dan OJK POJK 11." 
+    },
+    { 
+      icon: ShieldCheck, 
+      t: isEn ? "Incident Response Runbooks" : "Manajemen Insiden & Tanggap Darurat", 
+      d: isEn ? "Documented runbooks with regulator-ready incident packets generated under 4 hours." : "Prosedur tanggap darurat terdokumentasi dengan laporan insiden siap kirim ke regulator." 
+    },
+  ];
+
+  const MATURITY = [
+    { area: isEn ? "Data Protection (UU PDP No. 27/2022)" : "Perlindungan Data Pribadi (UU PDP)", level: 96 },
+    { area: isEn ? "Bank Indonesia PBI No. 10/2025" : "Kepatuhan FDS Bank Indonesia (PBI 10/2025)", level: 94 },
+    { area: isEn ? "OJK POJK 11 IT Risk Management" : "Manajemen Risiko TI (OJK POJK 11)", level: 90 },
+    { area: isEn ? "ISO 27001 Security Controls" : "Kontrol Keamanan ISO 27001", level: 92 },
+    { area: isEn ? "Explainable AI (SHAP) Governance" : "Tata Kelola Model Explainable AI (SHAP)", level: 95 },
+  ];
+
   return (
-    <AppShell title="Compliance & Security Center" subtitle="Governance · audit · controls">
+    <AppShell 
+      title={isEn ? "Compliance & Governance Center" : "Pusat Kepatuhan & Tata Kelola Reguler"} 
+      subtitle={isEn ? "Governance · audit readiness · security controls" : "Tata kelola · kesiapan audit BI & PPATK · kontrol keamanan"}
+    >
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { t: "Active controls", v: "47", d: "across 8 control families" },
-          { t: "Last external audit", v: "12 wks", d: "no critical findings" },
-          { t: "Mean time to report", v: "3.2 h", d: "regulator-ready packets" },
+          { 
+            t: isEn ? "Active Security Controls" : "Kontrol Keamanan Aktif", 
+            v: "47", 
+            d: isEn ? "across 8 control families" : "tersebar di 8 rumpun kontrol" 
+          },
+          { 
+            t: isEn ? "Data Residency & Hashing" : "Status Kedaulatan & Hashing Data", 
+            v: "SHA-256", 
+            d: isEn ? "PII masked before AI pipeline" : "PII di-hash sebelum masuk engine AI" 
+          },
+          { 
+            t: isEn ? "Audit Reporting SLA" : "SLA Laporan Audit Regulator", 
+            v: "< 4 Jam", 
+            d: isEn ? "regulator-ready incident packets" : "paket data siap kirim ke BI/PPATK" 
+          },
         ].map((k) => (
           <div key={k.t} className="rounded-lg border border-border bg-card p-5">
             <div className="text-xs text-muted-foreground">{k.t}</div>
-            <div className="num mt-1 text-2xl font-semibold">{k.v}</div>
-            <div className="text-xs text-muted-foreground">{k.d}</div>
+            <div className="num mt-1 text-2xl font-bold text-foreground">{k.v}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{k.d}</div>
           </div>
         ))}
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2 rounded-lg border border-border bg-card">
-          <div className="border-b border-border px-5 py-4 text-sm font-semibold">Operational controls</div>
+          <div className="border-b border-border px-5 py-4 text-sm font-semibold">
+            {isEn ? "Operational Security & Compliance Controls" : "Kontrol Operasional Keamanan & Kepatuhan"}
+          </div>
           <div className="grid gap-px bg-border md:grid-cols-2">
             {CONTROLS.map((c) => {
               const Icon = c.icon;
@@ -79,16 +132,18 @@ function CompliancePage() {
         </div>
 
         <div className="rounded-lg border border-border bg-card">
-          <div className="border-b border-border px-5 py-4 text-sm font-semibold">Maturity indicators</div>
+          <div className="border-b border-border px-5 py-4 text-sm font-semibold">
+            {isEn ? "Regulatory Readiness Maturity" : "Tingkat Kematangan Kepatuhan Regulasi"}
+          </div>
           <div className="space-y-4 p-5">
             {MATURITY.map((m) => (
               <div key={m.area}>
                 <div className="flex items-center justify-between text-xs">
-                  <span>{m.area}</span>
-                  <span className="num text-muted-foreground">{m.level}%</span>
+                  <span className="font-medium text-foreground">{m.area}</span>
+                  <span className="num text-muted-foreground font-mono">{m.level}%</span>
                 </div>
                 <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full bg-primary" style={{ width: `${m.level}%` }} />
+                  <div className="h-full bg-primary rounded-full" style={{ width: `${m.level}%` }} />
                 </div>
               </div>
             ))}
@@ -96,76 +151,27 @@ function CompliancePage() {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="rounded-lg border border-border bg-card">
-          <div className="border-b border-border px-5 py-4 text-sm font-semibold">Fraud investigation workflow</div>
-          <div className="flex flex-col">
-            {[
-              { n: 1, t: "Detect", d: "AI scoring + rule overlays" },
-              { n: 2, t: "Triage", d: "Analyst queue by severity" },
-              { n: 3, t: "Investigate", d: "Graph drilldown & evidence" },
-              { n: 4, t: "Decide", d: "Hold · refund · escalate" },
-              { n: 5, t: "Report", d: "Regulator packet generated" },
-            ].map((s) => (
-              <div key={s.n} className="flex gap-4 p-4 border-b border-border last:border-0">
-                <div className="flex-shrink-0 grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                  {s.n}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">{s.t}</div>
-                  <div className="text-xs text-muted-foreground">{s.d}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ─── Indonesian Regulatory Alignment Box ─── */}
+      <div className="mt-4 rounded-lg border border-border bg-card p-6 space-y-3">
+        <div className="text-sm font-semibold text-foreground">
+          {isEn ? "Indonesian Banking & Regulator Alignment" : "Kesesuaian dengan Regulasi Perbankan Indonesia"}
         </div>
-
-        <div className="rounded-lg border border-border bg-card flex flex-col">
-          <div className="border-b border-border px-5 py-4 text-sm font-semibold">Security Infrastructure</div>
-          <div className="flex-1 p-5 bg-surface/50 overflow-hidden relative min-h-[300px]">
-            <svg viewBox="0 0 500 400" className="w-full h-full">
-              <defs>
-                <marker id="arrow-sec" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                  <path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" />
-                </marker>
-              </defs>
-              
-              {/* Outer boundary */}
-              <rect x="20" y="20" width="460" height="360" rx="8" fill="none" stroke="var(--border)" strokeWidth="2" strokeDasharray="6 6" />
-              <text x="250" y="45" textAnchor="middle" fontSize="12" fill="var(--muted-foreground)" fontWeight="600">SECURE VPC ENCLAVE</text>
-
-              {/* Data Ingestion */}
-              <rect x="50" y="80" width="120" height="60" rx="6" fill="var(--card)" stroke="var(--primary)" strokeWidth="2" />
-              <text x="110" y="110" textAnchor="middle" fontSize="12" fill="var(--foreground)" fontWeight="500">API Gateway</text>
-              <text x="110" y="125" textAnchor="middle" fontSize="10" fill="var(--muted-foreground)">mTLS / Rate Limit</text>
-
-              {/* Tokenization */}
-              <rect x="250" y="80" width="120" height="60" rx="6" fill="var(--card)" stroke="var(--warning)" strokeWidth="2" />
-              <text x="310" y="110" textAnchor="middle" fontSize="12" fill="var(--warning)" fontWeight="500">Tokenization</text>
-              <text x="310" y="125" textAnchor="middle" fontSize="10" fill="var(--muted-foreground)">PII Anonymizer</text>
-
-              {/* AI Engine */}
-              <rect x="250" y="180" width="120" height="60" rx="6" fill="var(--card)" stroke="var(--primary)" strokeWidth="2" />
-              <text x="310" y="210" textAnchor="middle" fontSize="12" fill="var(--foreground)" fontWeight="500">Scoring Engine</text>
-              <text x="310" y="225" textAnchor="middle" fontSize="10" fill="var(--muted-foreground)">Anonymized Data</text>
-
-              {/* Audit DB */}
-              <rect x="150" y="280" width="200" height="60" rx="6" fill="var(--card)" stroke="var(--success)" strokeWidth="2" />
-              <text x="250" y="310" textAnchor="middle" fontSize="12" fill="var(--success)" fontWeight="500">Immutable Audit Log</text>
-              <text x="250" y="325" textAnchor="middle" fontSize="10" fill="var(--muted-foreground)">Encrypted Data at Rest</text>
-
-              {/* Connections */}
-              <line x1="170" y1="110" x2="240" y2="110" stroke="var(--muted-foreground)" strokeWidth="2" markerEnd="url(#arrow-sec)" />
-              <line x1="310" y1="140" x2="310" y2="170" stroke="var(--muted-foreground)" strokeWidth="2" markerEnd="url(#arrow-sec)" />
-              
-              {/* Audit Logging connections */}
-              <line x1="110" y1="140" x2="110" y2="310" stroke="var(--muted-foreground)" strokeWidth="2" strokeDasharray="4 4" />
-              <line x1="110" y1="310" x2="140" y2="310" stroke="var(--muted-foreground)" strokeWidth="2" strokeDasharray="4 4" markerEnd="url(#arrow-sec)" />
-              
-              <line x1="310" y1="240" x2="310" y2="280" stroke="var(--muted-foreground)" strokeWidth="2" strokeDasharray="4 4" markerEnd="url(#arrow-sec)" />
-
-            </svg>
-          </div>
+        <div className="grid gap-4 md:grid-cols-3 text-xs md:text-sm">
+          <p className="text-muted-foreground">
+            <span className="font-medium text-foreground">{isEn ? "UU PDP No. 27/2022:" : "UU PDP No. 27/2022:"}</span> {isEn 
+              ? "Strict PII data minimization & hashing SHA-256 before AI processing ensures zero PII leaks." 
+              : "Prinsip minimisasi data PII dan pengacakan SHA-256 sebelum diproses engine AI menjamin kedaulatan data nasabah."}
+          </p>
+          <p className="text-muted-foreground">
+            <span className="font-medium text-foreground">{isEn ? "PBI No. 10/2025:" : "PBI No. 10/2025:"}</span> {isEn 
+              ? "Mandatory FDS integration for PJP payment switches with real-time scoring under 50ms." 
+              : "Kewajiban FDS terintegrasi bagi PJP dengan kecepatan inferensi real-time di bawah 50ms."}
+          </p>
+          <p className="text-muted-foreground">
+            <span className="font-medium text-foreground">{isEn ? "FATF & PPATK Reporting:" : "Standar FATF & PPATK:"}</span> {isEn 
+              ? "SHAP Explainable AI rationale provides clear evidence trail for suspicious transaction reporting." 
+              : "Penjelasan SHAP Explainable AI menyediakan jejak audit jelas untuk penyusunan Lapor Transaksi Keuangan Mencurigakan (LTKM)."}
+          </p>
         </div>
       </div>
     </AppShell>
